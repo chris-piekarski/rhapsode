@@ -1,0 +1,27 @@
+"""Rhapsode — turn web pages into narrated audio books.
+
+Pipeline: extract page text  →  Kokoro TTS  →  proofread with Whisper
+          →  ffmpeg encode with chapters.
+"""
+
+from .document import Document, Section, Block, Utterance, build_script, load
+from .narrate import Narrator, Timing
+from .speech import Lexicon
+from .proof import ProofReport
+from .bind import Chapter, encode, ffmetadata
+from .paths import output_dir, inbox_dir, work_dir, slugify
+
+__all__ = [
+    # document
+    "Document", "Section", "Block", "Utterance", "build_script", "load",
+    # tts
+    "Narrator", "Timing",
+    # lexicon
+    "Lexicon",
+    # proofreading
+    "ProofReport",
+    # encoding
+    "Chapter", "encode", "ffmetadata",
+    # paths
+    "output_dir", "inbox_dir", "work_dir", "slugify",
+]

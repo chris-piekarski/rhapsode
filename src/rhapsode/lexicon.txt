@@ -1,0 +1,16 @@
+# Rhapsode pronunciation lexicon (built-in defaults).
+#
+#   word = /phonemes/    pin the pronunciation with Kokoro's misaki phonemes
+#   word = respelling    speak this text instead
+#
+# Matching is whole-word and case-sensitive. Add your own entries in
+# ~/.config/rhapsode/lexicon.txt (loaded after this file, so it wins).
+# `rhapsode speak` prints proofreading misses that are good candidates.
+
+nginx = engine x
+kubectl = kube control
+PostgreSQL = postgres Q L
+SQLite = S Q lite
+GUI = gooey
+YAML = /jˈæməl/
+JSON = /ʤˈAsᵊn/

@@ -1,0 +1,12 @@
+*.pyc
+__pycache__/
+.mypy_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+*.egg
+.DS_Store
+*.wasm
+*.whl
+graft/

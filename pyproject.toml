@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=78", "setuptools-scm[toml]>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rhapsode"
+version = "0.1.0"
+description = "Turn web pages / documents into narrated audiobooks with Kokoro TTS"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "kokoro>=0.9.4",
+    "faster-whisper>=1.2.0",
+    "soundfile>=0.12",
+    "numpy>=2",
+    "num2words>=0.5.10",
+    "pydub>=0.25",
+]
+
+[project.scripts]
+rhapsode = "rhapsode.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+rhapsode = ["lexicon.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
