@@ -10,3 +10,4 @@ build/
 *.wasm
 *.whl
 graft/
+.coverage

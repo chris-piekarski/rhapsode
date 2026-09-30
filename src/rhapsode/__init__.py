@@ -7,7 +7,7 @@ Pipeline: extract page text  →  Kokoro TTS  →  proofread with Whisper
 from .document import Document, Section, Block, Utterance, build_script, load
 from .narrate import Narrator, Timing
 from .speech import Lexicon
-from .proof import ProofReport
+from .proof import ProofReport, proofread
 from .bind import Chapter, encode, ffmetadata
 from .paths import output_dir, inbox_dir, work_dir, slugify
 
