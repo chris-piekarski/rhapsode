@@ -11,3 +11,4 @@ build/
 *.whl
 graft/
 .coverage
+text-to-speech.wav
