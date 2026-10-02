@@ -1,6 +1,9 @@
 *.pyc
 __pycache__/
 .mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.benchmarks/
 .venv/
 dist/
 build/
@@ -11,4 +14,12 @@ build/
 *.whl
 graft/
 .coverage
+.coverage.*
+htmlcov/
 text-to-speech.wav
+.cursor/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
