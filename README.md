@@ -1,19 +1,20 @@
+[![version](https://img.shields.io/github/v/tag/chris-piekarski/rhapsode?sort=semver&label=version)](https://github.com/chris-piekarski/rhapsode/tags)
+[![python](https://img.shields.io/badge/python-3.10%2B-3776AB)](https://www.python.org/downloads/)
+[![license](https://img.shields.io/github/license/chris-piekarski/rhapsode)](https://github.com/chris-piekarski/rhapsode/blob/main/LICENSE)
+
 ```
-+----------------------------------------------------------+
-|                                                          |
-|  #####  #   #   ###   #####   ####   ###   ####   #####  |
-|  #   #  #   #  #   #  #   #  #      #   #  #   #  #      |
-|  #####  #####  #####  #####   ###   #   #  #   #  ####   |
-|  #  #   #   #  #   #  #          #  #   #  #   #  #      |
-|  #   #  #   #  #   #  #      ####    ###   ####   #####  |
-|                                                          |
-|  the page, read aloud                                    |
-|                                                          |
-|          ----------|---------------                      |
-|      --------------+---------------------------          |
-|              ------|---------------------                |
-|                                                          |
-+----------------------------------------------------------+
+                   ╭────────────────────╮                   
+                   │                    │                   
+                   │           ┃        │                   
+                   │    ━━━━━━━┃━━━     │                   
+                   │    ━━━━━━━┃        │                   
+                   │    ━━━━━  ┃        │                   
+                   │           ┃        │                   
+                   │                    │                   
+                   ╰────────────────────╯                   
+                                                            
+                          Rhapsode                          
+                    the page, read aloud                    
 ```
 
 Rhapsode is a local booth. It reads an open web page or a saved document aloud with Kokoro, keeps your place, and can proofread the recording and bind it into an audiobook with chapters.

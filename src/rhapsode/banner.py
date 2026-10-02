@@ -2,24 +2,20 @@
 
 from __future__ import annotations
 
-# 60 columns. The stroke under the name is the booth's playhead.
+# 60 columns. The mark is the booth icon: three text rules and a playhead.
 BANNER = """\
-+----------------------------------------------------------+
-|                                                          |
-|  #####  #   #   ###   #####   ####   ###   ####   #####  |
-|  #   #  #   #  #   #  #   #  #      #   #  #   #  #      |
-|  #####  #####  #####  #####   ###   #   #  #   #  ####   |
-|  #  #   #   #  #   #  #          #  #   #  #   #  #      |
-|  #   #  #   #  #   #  #      ####    ###   ####   #####  |
-|                                                          |
-|  the page, read aloud                                    |
-|                                                          |
-|          ----------|---------------                      |
-|      --------------+---------------------------          |
-|              ------|---------------------                |
-|                                                          |
-+----------------------------------------------------------+"""
-
+                   ╭────────────────────╮                   
+                   │                    │                   
+                   │           ┃        │                   
+                   │    ━━━━━━━┃━━━     │                   
+                   │    ━━━━━━━┃        │                   
+                   │    ━━━━━  ┃        │                   
+                   │           ┃        │                   
+                   │                    │                   
+                   ╰────────────────────╯                   
+                                                            
+                          Rhapsode                          
+                    the page, read aloud                    """
 SUMMARY = (
     "Rhapsode is a local booth. It reads an open web page or a saved "
     "document aloud with Kokoro, keeps your place, and can proofread "
