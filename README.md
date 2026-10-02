@@ -1,9 +1,3 @@
-# Rhapsode
-
-MIT License — Copyright 2026 Chris Piekarski
-
-![Rhapsode](src/rhapsode/icon.svg)
-
 ```
 +----------------------------------------------------------+
 |                                                          |
@@ -24,11 +18,9 @@ MIT License — Copyright 2026 Chris Piekarski
 
 Rhapsode is a local booth. It reads an open web page or a saved document aloud with Kokoro, keeps your place, and can proofread the recording and bind it into an audiobook with chapters.
 
-Open the booth with `rhapsode live` on a saved page, then choose another Chrome tab from the page itself. Speed, voice, and the playhead stay on this machine. Kokoro speaks. Whisper can listen back. ffmpeg binds the chapters.
-
-The name is a job. A rhapsode stitched songs together and spoke them. The long version, and two diagrams, is [About](docs/about.md). The booth keeps the same note behind About.
-
 ![Rhapsode booth reading a chapter, with the source card, playback and volume controls, the section chart, and the script.](docs/booth.png)
+
+Open a saved page with `rhapsode live`, then choose the Chrome tab from the booth. A rhapsode stitched songs and spoke them. [About](docs/about.md) tells that story and draws the desk.
 
 ## Install
 
