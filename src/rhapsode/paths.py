@@ -69,3 +69,13 @@ def to_windows(path: Path) -> str:
 def slugify(text: str, limit: int = 80) -> str:
     slug = re.sub(r"[^A-Za-z0-9]+", "-", text).strip("-")
     return (slug[:limit].rstrip("-") or "untitled")
+
+
+def speech_cache_dir() -> Path:
+    """Disk cache root for Kokoro TTS synthesis results.
+
+    Override with :envvar:`RHAPSODE_SPEECH_CACHE`.
+    """
+    if env := os.environ.get("RHAPSODE_SPEECH_CACHE"):
+        return Path(env).expanduser()
+    return work_dir("speech")
