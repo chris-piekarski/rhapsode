@@ -203,7 +203,7 @@ sequenceDiagram
 
 ### Tools
 
-The MCP server exposes 8 tools. All tool calls are forwarded to the operator desk over HTTP.
+The MCP server exposes 13 tools. All tool calls are forwarded to the operator desk over HTTP.
 
 #### `status`
 
@@ -250,7 +250,7 @@ Routes to: `POST /control` with `{"type": "transport", "action": "pause"}`.
 
 #### `speed`
 
-**Description**: Set the playback speed. 1.0 is normal; the booth usually uses 0.8 to 1.6.
+**Description**: Set the playback speed. 0.5 to 2.0.
 
 **Parameters**:
 | Name | Type | Required | Default | Constraints |
@@ -272,7 +272,7 @@ Routes to: `POST /control` with `{"type": "seek", "seconds": N}`.
 
 #### `skip`
 
-**Description**: Skip forward or back by seconds from the saved playhead. Negative moves back.
+**Description**: Skip forward or back by seconds from the current playhead. Negative moves back. Raises `RuntimeError` if the booth has not yet reported a playhead.
 
 **Parameters**:
 | Name | Type | Required | Default | Constraints |
@@ -285,13 +285,13 @@ Routes to: `POST /control` with `{"type": "seek", "seconds": max(playhead + seco
 
 #### `voice`
 
-**Description**: Switch the Kokoro voice from the given line onward. Use a voice id such as `af_heart`.
+**Description**: Switch the Kokoro voice from the given line onward. Use a voice id such as `af_heart`. When `line` is not provided, resolves to the current audio line from `status()`.
 
 **Parameters**:
 | Name | Type | Required | Default | Constraints |
 |------|------|----------|---------|-------------|
 | `name` | str | yes | — | must be in `ENGLISH_VOICES` (28 voices) |
-| `line` | int | no | 0 | line ≥ 0 |
+| `line` | int | no | None | line ≥ 0; when None, auto-resolves to current line from `status()` |
 
 Routes to: `POST /control` with `{"type": "voice", "value": name, "line": N}`.
 
@@ -301,9 +301,73 @@ Routes to: `POST /control` with `{"type": "voice", "value": name, "line": N}`.
 
 **Parameters**: none.
 
-**Returns**: `List[Dict]` of voice info (id, label, accent, gender, …).
+**Returns**: `{"voices": [...]}`. Each voice has `id`, `label`, `accent`, and `gender`.
 
 Routes to: `GET /voices`.
+
+
+#### `lines`
+
+**Description**: Return a slice of the script lines.
+
+**Parameters**:
+| Name | Type | Required | Default | Constraints |
+|------|------|----------|---------|-------------|
+| `start` | int | no | 0 | ≥ 0 |
+| `count` | int | no | 20 | ≥ 1 |
+
+**Returns**: `{"lines": [...]}`. Each line has `index`, `kind`, `status`, `text`, `start`, and `end`.
+
+Routes to: `GET /session` → `Booth.lines()`.
+
+#### `seek_line`
+
+**Description**: Seek to the start of a specific script line by index.
+
+**Parameters**:
+| Name | Type | Required | Default | Constraints |
+|------|------|----------|---------|-------------|
+| `index` | int | yes | — | ≥ 0, line must have audio (start time) |
+
+**Behavior**: Looks up the line's start time and seeks to it. An index outside the script, or a line with no audio yet, is a tool error that includes the reason.
+
+Routes to: `GET /session` → `POST /control` (seek).
+
+#### `tabs`
+
+**Description**: List open Chrome tabs.
+
+**Parameters**: none.
+
+**Returns**: `{"tabs": [...]}`. Each tab has `id` and `url`, and `title` when Chrome has one.
+
+Routes to: `GET /tabs` → `Booth.tabs()`.
+
+#### `open_tab`
+
+**Description**: Open and read a Chrome page. Reuses an existing tab for the same URL.
+
+**Parameters**:
+| Name | Type | Required | Default | Constraints |
+|------|------|----------|---------|-------------|
+| `url` | str | yes | — | must start with `http` |
+
+Routes to: `POST /tab`. A non-http URL is rejected before the request. A refusal comes back as a tool error that includes the reason.
+
+#### `export`
+
+**Description**: Export spoken lines from `start` to `end` as a WAV file.
+
+**Parameters**:
+| Name | Type | Required | Default | Constraints |
+|------|------|----------|---------|-------------|
+| `start` | int | no | 0 | ≥ 0 |
+| `end` | int | no | 0 | inclusive line index; `0` exports line 0 only |
+| `name` | str | no | `"rhapsode.wav"` | file name, saved under `XDG_CACHE_HOME/rhapsode/export/` |
+
+**Returns**: `{path, bytes, included, requested, partial}`.
+
+Routes to: `GET /export.wav?from=<start>&to=<end>&name=<name>`. A range with no audio is a tool error that includes the reason.
 
 ### Booth HTTP Client
 
@@ -314,6 +378,11 @@ Routes to: `GET /voices`.
 | `status()` | `GET /session` → `agent_view(response)` |
 | `command(msg)` | `POST /control` with `msg` JSON |
 | `voices()` | `GET /voices` |
+| `lines(start, count)` | `GET /session` → slice of lines |
+| `seek_line(index)` | lookup line → `POST /control` (seek) |
+| `tabs()` | `GET /tabs` |
+| `open_tab(url)` | `POST /tab` |
+| `export(start, end, name)` | `GET /export.wav` → writes WAV under the cache `export` directory |
 
 ### `serve(base)` Parameters
 

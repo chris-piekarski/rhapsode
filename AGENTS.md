@@ -51,18 +51,22 @@ The live desk serves on `http://127.0.0.1:8765` by default.
 
 ## Rhapsode MCP Server
 
-`agent.serve()` runs on stdio. It speaks the [Model Context Protocol](https://modelcontextprotocol.io/) and provides 8 tools that forward to the operator desk over HTTP:
-
-| tool | params | routes to |
-|------|--------|-----------|
-| `status` | — | `GET /session` → `agent.agent_view()` |
-| `play` | — | `POST /control` `{type: transport, action: play}` |
-| `pause` | — | `POST /control` `{type: transport, action: pause}` |
-| `speed` | `value: float` (0.5–2.0) | `POST /control` `{type: speed, value: N}` |
-| `seek` | `seconds: float` | `POST /control` `{type: seek, seconds: N}` |
-| `skip` | `seconds: float` (default 15) | computes absolute → `POST /control` `{type: seek, seconds: N}` |
-| `voice` | `name: str`, `line: int` (default 0) | `POST /control` `{type: voice, value: name, line: N}` |
-| `voices` | — | `GET /voices` (28 English Kokoro voices) |
+`agent.serve()` runs on stdio. It speaks the [Model Context Protocol](https://modelcontextprotocol.io/) and provides 13 tools that forward to the operator desk over HTTP:
+| tool | params | description |
+|------|--------|-------------|
+| `status` | — | Current booth state: page, line, transport, speed, voice, Chrome |
+| `play` | — | Start playback |
+| `pause` | — | Pause playback |
+| `speed` | `value: float` (0.5–2.0) | Set playback speed |
+| `seek` | `seconds: float` | Jump to absolute position |
+| `skip` | `seconds: float` (default 15) | Skip ± seconds from playhead; raises RuntimeError if playhead is None |
+| `voice` | `name: str`, `line: int \| None` (default None) | Switch voice from current line onward; auto-resolves line from status when omitted |
+| `voices` | — | List 28 English Kokoro voices |
+| `lines` | `start: int` (0), `count: int` (20) | Return slice of script lines |
+| `seek_line` | `index: int` | Seek to the start of a specific line |
+| `tabs` | — | List open Chrome tabs |
+| `open_tab` | `url: str` | Open and read a Chrome page |
+| `export` | `start: int` (0), `end: int` (0), `name: str` ("rhapsode.wav") | Export spoken lines to a WAV file |
 
 The MCP server base URL defaults to `http://127.0.0.1:8765`. Override via `agent.serve(base="…")`.
 
