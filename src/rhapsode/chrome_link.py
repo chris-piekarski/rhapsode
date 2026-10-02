@@ -373,8 +373,12 @@ def load_last_active(user_data: Path) -> list[str]:
     return [name for name in active if isinstance(name, str)]
 
 
+_CHROME_APP = Path("/mnt/c/Program Files/Google/Chrome/Application")
+_NODE_WINDOWS = Path("/mnt/c/Program Files/nodejs/node.exe")
+
+
 def _chrome_version() -> str:
-    app = Path("/mnt/c/Program Files/Google/Chrome/Application")
+    app = _CHROME_APP
     if not app.is_dir():
         return ""
     try:
@@ -413,9 +417,8 @@ def _listener_headless(host: str, port: int) -> bool:
 
 
 def _node_exe() -> str | None:
-    windows = Path("/mnt/c/Program Files/nodejs/node.exe")
-    if windows.is_file():
-        return str(windows)
+    if _NODE_WINDOWS.is_file():
+        return str(_NODE_WINDOWS)
     return None
 
 

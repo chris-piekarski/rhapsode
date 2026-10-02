@@ -202,23 +202,25 @@ def test_chromelink_profile_for_page_none():
 
 def test_chrome_version_no_dir(monkeypatch, tmp_path):
     from rhapsode.chrome_link import _chrome_version
-    # Chrome IS installed on this host, check version matches
-    assert _chrome_version() == "154.0.8037.58"
+
+    monkeypatch.setattr("rhapsode.chrome_link._CHROME_APP", tmp_path / "missing")
+    assert _chrome_version() == ""
+
+    app = tmp_path / "Application"
+    (app / "154.0.8037.58").mkdir(parents=True)
+    (app / "154.0.8037.93").mkdir()
+    (app / "PlatformExperienceHelper").mkdir()
+    monkeypatch.setattr("rhapsode.chrome_link._CHROME_APP", app)
+    assert _chrome_version() == "154.0.8037.93"
 
 
 # --- _node_exe ---
 
 def test_node_exe_no_install(monkeypatch, tmp_path):
     from rhapsode.chrome_link import _node_exe
-    monkeypatch.setattr("rhapsode.chrome_link._local_appdata", lambda: tmp_path)
-    result = _node_exe()
-    # When node is not installed, returns None
-    # When installed, returns a Path
-    if result is not None:
-        assert isinstance(str(result), str)
 
-
-    from rhapsode.chrome_link import _chrome_version
-    # Chrome IS installed on this host
-    version = _chrome_version()
-    assert version == "154.0.8037.58"
+    missing = tmp_path / "node.exe"
+    monkeypatch.setattr("rhapsode.chrome_link._NODE_WINDOWS", missing)
+    assert _node_exe() is None
+    missing.write_bytes(b"")
+    assert _node_exe() == str(missing)
