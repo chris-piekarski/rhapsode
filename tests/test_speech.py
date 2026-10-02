@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 from rhapsode.speech import Lexicon, clean_text, sentence, parse
-import pytest
 
 
 # ── clean_text ─────────────────────────────────────────────────

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="128" height="128" role="img" aria-label="Rhapsode">
+  <rect width="64" height="64" rx="16" fill="#100e0c"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="14.5" fill="none" stroke="#e4c27a" stroke-width="3"/>
+  <path d="M14 24h30" stroke="#f6f0e6" stroke-width="4" stroke-linecap="round"/>
+  <path d="M14 33h22" stroke="#f6f0e6" stroke-width="4" stroke-linecap="round"/>
+  <path d="M14 42h16" stroke="#f6f0e6" stroke-width="4" stroke-linecap="round"/>
+  <path d="M36 14v36" stroke="#e23b2f" stroke-width="4" stroke-linecap="round"/>
+</svg>

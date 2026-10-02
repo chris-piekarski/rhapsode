@@ -5,8 +5,6 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from rhapsode import slugify
-import pytest
 
 PYTHON = ".venv/bin/python"
 
@@ -26,8 +24,41 @@ def _cli(*args) -> subprocess.CompletedProcess[str]:
 def test_help():
     r = _cli("--help")
     assert r.returncode == 0
-    out = (r.stdout + r.stderr).lower()
-    assert "audiobook" in out or "narrat" in out
+    out = r.stdout + r.stderr
+    folded = out.lower()
+    assert "audiobook" in folded or "narrat" in folded
+    from rhapsode.banner import BANNER
+
+    assert BANNER.splitlines()[2] in out
+    assert "the page, read aloud" in out
+
+
+def test_banner_is_the_readme_nameplate():
+    from pathlib import Path
+
+    from rhapsode.banner import BANNER
+
+    widths = {len(line) for line in BANNER.splitlines()}
+    assert widths == {60}
+    assert BANNER in Path("README.md").read_text(encoding="utf-8")
+
+
+def test_make_help_shows_the_banner():
+    r = subprocess.run(
+        ["make", "help"],
+        capture_output=True, text=True, timeout=30,
+        cwd=str(Path(__file__).resolve().parents[1]),
+    )
+    assert r.returncode == 0, r.stderr
+    out = r.stdout
+    assert "the page, read aloud" in out
+    assert "text-to-speech" in out
+
+
+def test_version():
+    r = _cli("--version")
+    assert r.returncode == 0
+    assert r.stdout.strip() == "0.0.1"
 
 
 def test_narrate_help():
@@ -76,7 +107,7 @@ def test_run_dry_sections(tmp_path):
 def test_run_dry_no_proofread(tmp_path):
     doc = tmp_path / "doc.md"
     doc.write_text("# T\n\nH.\n")
-    r = _cli("run", str(doc), "--dry", "--no-proofread")
+    r = _cli("run", str(doc), "--dry", "--no-proof")
     assert r.returncode == 0, r.stderr
 
 

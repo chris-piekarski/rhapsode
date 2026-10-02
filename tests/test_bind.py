@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import subprocess as sp
 
 from rhapsode import Chapter, ffmetadata, encode
@@ -158,7 +157,7 @@ def test_encode_with_chapters(tmp_path):
     audio = np.zeros(48000, dtype=np.float32)
     sf.write(str(wav), audio, 24000)
 
-    with patch("rhapsode.bind.subprocess.run") as fake_run:
+    with patch("rhapsode.bind.subprocess.run"):
         encode(wav, out, ffmetadata("T", "A", "C", [Chapter(0, 1, "S1")]))
     meta_file = wav.with_suffix(".ffmeta")
     assert meta_file.exists()

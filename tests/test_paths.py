@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch
 
-import pytest
 
 from rhapsode.paths import (
     output_dir, inbox_dir, slugify,
-    whisper_models_dir, work_dir, is_wsl, to_windows, windows_home,
+    whisper_models_dir, work_dir, is_wsl, windows_home,
 )
 
 

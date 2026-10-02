@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 from rhapsode import Document, Section, Block, Utterance, build_script, load
 from rhapsode.document import clean_text, sentence, PAUSE, SECTION_GAP
-import pytest
 
 
 # ── clean_text ─────────────────────────────────────────────────

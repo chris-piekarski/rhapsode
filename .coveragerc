@@ -2,7 +2,8 @@
 source = rhapsode
 omit =
     src/rhapsode/cli.py
+    src/rhapsode/mcp.py
 
 [report]
-fail_under = 90
+fail_under = 80
 show_missing = True

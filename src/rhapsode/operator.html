@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rhapsode — the page, read aloud</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520;9..144,640&family=Outfit:wght@380;520&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #100e0c;
+    --panel: #1a1612;
+    --line: #3a3126;
+    --gold: #e4c27a;
+    --cream: #f6f0e6;
+    --mute: #b3a38f;
+    --red: #e23b2f;
+  }
+  body { margin: 0; background: radial-gradient(1200px 500px at 10% -10%, #2a2218, var(--ink)); color: var(--cream); font: 17px/1.45 Outfit, system-ui, sans-serif; }
+  main { max-width: 57.2rem; margin: 0 auto; padding: 1.6rem 1.2rem 2.5rem; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
+  .brand { display: flex; align-items: center; gap: 0.85rem; min-width: 0; }
+  .app-icon { width: 2.75rem; height: 2.75rem; flex: 0 0 auto; }
+  .words span { position: relative; }
+  .words span.w-active {
+    background-image: linear-gradient(var(--thread, var(--gold)), var(--thread, var(--gold)));
+    background-repeat: no-repeat;
+    background-size: calc(var(--stitch, 0) * 100%) 2px;
+    background-position: left bottom;
+  }
+  body.is-muted .words span.w-active {
+    background-image: repeating-linear-gradient(90deg, var(--thread, var(--gold)) 0 4px, transparent 4px 7px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #seal-needle { transform: none; }
+  }
+  .mark { font-family: Fraunces, Georgia, serif; font-size: 2rem; letter-spacing: -0.03em; margin: 0; }
+  .mark span { color: var(--gold); }
+  .tagline { margin: 0.12rem 0 0; color: var(--mute); font-size: 0.95rem; line-height: 1.35; }
+  #state { margin: 0; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.78rem; flex: 0 0 auto; }
+  #source { display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.8rem; margin-bottom: 1rem; min-width: 0; }
+  article { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 0.85rem 1rem; min-width: 0; }
+  h2 { margin: 0 0 0.3rem; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); font-weight: 520; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; }
+  .card-head h2 { margin: 0; }
+  .card-note { margin: 0 0 0.55rem; color: var(--mute); font-size: 0.88rem; line-height: 1.4; }
+  #pick-tab { flex: 0 0 auto; font-size: 0.78rem; letter-spacing: 0.03em; padding: 0.35rem 0.75rem; }
+  #tab-list { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.85rem; max-height: min(70vh, 32rem); overflow: auto; min-width: 0; max-width: 100%; }
+  #tab-list[hidden] { display: none; }
+  #tab-list button.tab { display: flex; flex-direction: column; align-items: stretch; gap: 0.28rem; width: 100%; max-width: 100%; min-width: 0; flex: 0 0 auto; box-sizing: border-box; text-align: left; border-radius: 12px; padding: 0.8rem 0.95rem; line-height: 1.35; white-space: normal; }
+  #tab-list button.tab:hover { border-color: var(--gold); }
+  #tab-list .tab-title { font-size: 1.08rem; line-height: 1.35; color: var(--cream); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  #tab-list .tab-url { font-size: 0.95rem; line-height: 1.3; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tab-list .tab-note { margin: 0; color: var(--mute); font-size: 1rem; line-height: 1.4; }
+  p { margin: 0; overflow-wrap: anywhere; }
+  #src-title, #mcp-instance { font-family: Fraunces, Georgia, serif; font-size: 1.15rem; line-height: 1.35; }
+  a#src-where { display: block; margin-top: 0.35rem; font-size: 0.92rem; color: var(--gold); text-decoration: underline; text-underline-offset: 0.15em; }
+  a#src-where:hover { color: var(--cream); }
+  #mcp-profile { margin-top: 0.2rem; color: var(--mute); font-size: 0.92rem; }
+  button { font: inherit; color: var(--cream); background: #2a241c; border: 1px solid var(--line); border-radius: 999px; padding: 0.65rem 1rem; cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+  #play { min-width: 6.6rem; }
+  #voice { flex: 1 1 10rem; min-width: 9rem; width: auto; font: inherit; color: var(--cream); background: #2a241c; border: 1px solid var(--line); border-radius: 999px; padding: 0.65rem 0.8rem; cursor: pointer; outline: none; }
+  .seek-btn { min-width: 4.2rem; font-weight: 520; padding: 0.55rem 0.75rem; }
+  #script { list-style: none; margin: 0.4rem 0 0; padding: 0 0 3rem; }
+  #script li { display: grid; grid-template-columns: 5.2rem 1fr 1.9rem; gap: 0.6rem; align-items: start; padding: 0.55rem 0.2rem; border-top: 1px solid var(--line); color: var(--mute); }
+  #script li[aria-current="true"] { color: var(--cream); }
+  #script li[aria-current="true"] .words { font-family: Fraunces, Georgia, serif; font-size: 1.35rem; line-height: 1.35; }
+  .kind { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; padding-top: 0.35rem; }
+  li[data-status="rendering"] .kind::after { content: " · rendering"; color: var(--gold); }
+  #mcp-dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--mute); vertical-align: middle; margin-right: 0.35rem; transition: background 0.2s; }
+  #mcp-dot.connected { background: var(--gold); }
+  #mcp-dot.active { background: var(--red); box-shadow: 0 0 0 3px rgba(226, 59, 47, 0.35); }
+  #mcp-traffic { margin-top: 0.2rem; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .words { display: inline; }
+  .words span.w-active { color: var(--red); transition: color 0.05s; }
+  #transport { display: flex; flex-direction: column; gap: 0.55rem; margin: 0.8rem 0 0.35rem; min-width: 0; }
+  #controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; min-width: 0; }
+  #controls button, #controls select { box-sizing: border-box; }
+  #speeds { display: flex; flex: 0 0 auto; flex-wrap: nowrap; gap: 0.4rem; margin: 0; }
+  #speeds button { padding: 0.55rem 0.72rem; }
+  .volume { display: flex; align-items: center; gap: 0.4rem; flex: 1 1 12rem; min-width: 9.5rem; max-width: 16rem; }
+  #mute { width: 2.7rem; height: 2.7rem; padding: 0; display: grid; place-items: center; flex: 0 0 auto; }
+  #mute svg { width: 1.2rem; height: 1.2rem; display: block; }
+  #mute .cross { display: none; }
+  #mute.is-silent .wave { display: none; }
+  #mute.is-silent .cross { display: block; }
+  #level { flex: 1 1 auto; min-width: 4.5rem; width: 100%; accent-color: var(--gold); cursor: pointer; }
+  #position { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+  #script li.wave-row { display: block; padding: 0.15rem 2.6rem 0.7rem 5.8rem; border-top: 0; background: transparent; }
+  #wave { width: 100%; height: 2.4rem; display: block; margin: 0; background: #2a241c; border: 1px solid var(--line); border-radius: 10px; }
+  #section-name { margin: 0; min-height: 1.35rem; font-size: 0.98rem; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #gantt { position: relative; display: flex; width: 100%; height: 2.55rem; box-sizing: border-box; background: #2a241c; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  #gantt .gantt-bar { flex: 1 1 0; min-width: 0; height: 100%; box-sizing: border-box; margin: 0; padding: 0; border: 0; border-right: 1px solid var(--ink); border-radius: 0; background: #3a3126; color: var(--cream); font-size: 0.68rem; letter-spacing: 0.02em; text-align: left; white-space: nowrap; overflow: hidden; cursor: pointer; }
+  #gantt .gantt-bar.head { background: #4e3e2e; }
+  #gantt .gantt-bar.current { background: #6d5436; color: var(--gold); box-shadow: inset 0 -2px 0 var(--gold); }
+  #gantt .gantt-bar:hover { background: #7c6246; }
+  #gantt-head { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--red); pointer-events: none; }
+  #gantt .gantt-bar { position: relative; }
+  #gantt .gantt-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(228, 194, 122, 0.42); pointer-events: none; z-index: 0; }
+  #gantt .gantt-label { position: relative; z-index: 1; }
+  #gantt-head { z-index: 2; }
+  #section-name.slide { animation: section-in 0.35s ease; }
+  @keyframes section-in {
+    from { transform: translateX(0.75rem); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+  #gantt.stitch-flash { animation: stitch-flash 0.45s ease; }
+  @keyframes stitch-flash {
+    0% { box-shadow: inset 0 0 0 2px #e4c27a; }
+    100% { box-shadow: inset 0 0 0 0 rgba(228, 194, 122, 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #section-name.slide { animation: none; }
+    #gantt.stitch-flash { animation: none; }
+  }
+  #track { width: 100%; height: 2.35rem; box-sizing: border-box; background: #2a241c; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; touch-action: none; overflow-x: auto; overflow-y: hidden; scrollbar-color: var(--gold) #1a1612; scrollbar-width: auto; }
+  #track::-webkit-scrollbar { height: 12px; }
+  #track::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 999px; }
+  #track::-webkit-scrollbar-track { background: #1a1612; }
+  #reel { position: relative; height: 100%; width: max-content; min-width: 100%; }
+  #sections { display: flex; height: 100%; }
+  .section { display: flex; align-items: center; height: 100%; box-sizing: border-box; border-right: 1px solid var(--ink); background: #3a3126; overflow: hidden; padding: 0 0.45rem; font-size: 0.68rem; letter-spacing: 0.03em; white-space: nowrap; color: var(--cream); }
+  .section.head { background: #5a4630; }
+  #track-head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--red); pointer-events: none; }
+  button.export { width: 1.9rem; height: 1.9rem; padding: 0; border-radius: 8px; background: transparent; color: var(--mute); display: grid; place-items: center; }
+  button.export:hover { color: var(--cream); background: #2a241c; }
+  .mast { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; flex: 0 0 auto; }
+  #about-open { color: var(--gold); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; }
+  #about-open:hover { text-decoration: underline; text-underline-offset: 0.18em; }
+  #about { width: min(40rem, calc(100vw - 1.5rem)); max-height: min(86vh, 52rem); margin: auto; padding: 1.25rem 1.35rem 1.5rem; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--cream); box-shadow: 0 24px 80px #000a; }
+  #about::backdrop { background: rgba(8, 6, 4, 0.72); }
+  #about .about-bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.35rem; }
+  #about .about-kicker { margin: 0; color: var(--gold); letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.75rem; }
+  #about .about-close { font-size: 0.85rem; padding: 0.35rem 0.8rem; }
+  #about h2 { font-family: Fraunces, Georgia, serif; font-size: 2rem; letter-spacing: -0.03em; text-transform: none; color: var(--cream); font-weight: 640; margin: 0 0 0.85rem; }
+  #about h3 { font-family: Fraunces, Georgia, serif; font-size: 1.25rem; letter-spacing: 0; text-transform: none; color: var(--gold); font-weight: 520; margin: 1.35rem 0 0.35rem; }
+  #about p { margin: 0 0 0.85rem; line-height: 1.5; }
+  #about em { font-style: italic; }
+  #about figure { margin: 0.2rem 0 0.4rem; }
+  #about figcaption { color: var(--mute); font-size: 0.92rem; line-height: 1.4; margin-top: 0.45rem; }
+  #about svg { width: 100%; height: auto; display: block; }
+  @media (max-width: 720px) {
+    header { align-items: flex-start; }
+    #source { grid-template-columns: 1fr; }
+    #about { padding: 1rem 0.9rem 1.2rem; }
+    #about h2 { font-size: 1.6rem; }
+  }
+  #script li[data-kind="heading"] button.export { color: var(--gold); }
+  #script li[data-status="pending"] button.export { opacity: 0.4; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">
+      <svg id="seal" class="app-icon" viewBox="0 0 64 64" width="44" height="44" aria-hidden="true">
+        <rect width="64" height="64" rx="16" fill="#100e0c"/>
+        <rect x="1.5" y="1.5" width="61" height="61" rx="14.5" fill="none" stroke="#e4c27a" stroke-width="3"/>
+        <path d="M14 24h30" stroke="#f6f0e6" stroke-width="4" stroke-linecap="round"/>
+        <path d="M14 33h22" stroke="#f6f0e6" stroke-width="4" stroke-linecap="round"/>
+        <path d="M14 42h16" stroke="#f6f0e6" stroke-width="4" stroke-linecap="round"/>
+        <line id="seal-needle" x1="36" y1="14" x2="36" y2="50" stroke="#e23b2f" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1 class="mark">Rhap<span>sode</span></h1>
+        <p class="tagline">The page, read aloud. A booth for the tab in front of you.</p>
+      </div>
+    </div>
+    <div class="mast">
+      <a href="#about" id="about-open">About</a>
+      <p id="state">Paused · 0.8×</p>
+    </div>
+  </header>
+  <section id="source">
+    <article>
+      <div class="card-head">
+        <h2>Reading</h2>
+        <button type="button" id="pick-tab">Choose tab</button>
+      </div>
+      <p class="card-note">The chapter on the desk. Choose a Chrome tab when you want a different page.</p>
+      <p id="src-title">Waiting for a page…</p>
+      <a id="src-where" hidden></a>
+      <div id="tab-list" hidden></div>
+    </article>
+    <article>
+      <h2><span id="mcp-dot"></span>Source</h2>
+      <p class="card-note">Where this reading came from. Speech tokens are the phonemes Kokoro has spoken.</p>
+      <p id="mcp-instance">Looking for the source…</p>
+      <p id="mcp-profile"></p>
+      <p id="mcp-traffic"></p>
+    </article>
+  </section>
+  <div id="transport">
+    <div id="controls">
+      <button type="button" id="play">Play</button>
+      <button type="button" class="seek-btn" id="seek-back" title="Back 15 seconds">−15s</button>
+      <button type="button" class="seek-btn" id="seek-fwd" title="Forward 15 seconds">+15s</button>
+      <button type="button" id="sync" title="Jump to the section that is playing.">Sync</button>
+      <div id="speeds">
+        <button type="button" data-speed="0.8" aria-pressed="true">0.8×</button>
+        <button type="button" data-speed="1.0">1.0×</button>
+        <button type="button" data-speed="1.2">1.2×</button>
+        <button type="button" data-speed="1.4">1.4×</button>
+        <button type="button" data-speed="1.6">1.6×</button>
+      </div>
+      <select id="voice" title="Speaks again from this line in the voice you pick. Names are grouped by accent.">
+        <option>…</option>
+      </select>
+      <div class="volume">
+        <button type="button" id="mute" aria-pressed="false" aria-label="Mute" title="Mute. The reading keeps its place.">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M4 9.5h3.2L12 5v14l-4.8-4.5H4z"/>
+            <path class="wave" d="M15.5 9.2a4.2 4.2 0 0 1 0 5.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="wave" d="M18 7a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="cross" d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <input id="level" type="range" min="0" max="100" value="100" aria-label="Volume" title="Volume for this tab, including a cast or another audio device">
+      </div>
+    </div>
+    <div id="position">
+      <p id="section-name"></p>
+      <div id="gantt" aria-label="Sections"></div>
+      <div id="track" aria-label="Page position"><div id="reel"><div id="sections"></div><div id="track-head"></div></div></div>
+    </div>
+  </div>
+  <ol id="script"><li id="wave-row" class="wave-row"><canvas id="wave" width="640" height="48" role="img" aria-label="Waveform of the spoken line"></canvas></li></ol>
+</main>
+<dialog id="about" aria-labelledby="about-title">
+  <div class="about-bar">
+    <p class="about-kicker">The name</p>
+    <button type="button" class="about-close">Close</button>
+  </div>
+  <h2 id="about-title">Rhapsode</h2>
+  <p>A rhapsode was the person you sent for when a poem had to stand up and talk.</p>
+  <p>The Greek is ῥαψῳδός, <em>rhapsōidos</em>. It is two words stitched into one. ῥάπτειν, <em>rháptein</em>, means to sew. ᾠδή, <em>ōidē</em>, means a song. A song-stitcher. Not the poet. Not the page. The performer who takes pieces that already exist and makes them one long thing, in a voice, in a room, without losing the place.</p>
+  <p>That was a trade. In classical Greece a rhapsode learned Homer and the other epics, walked into a festival, and recited. The Iliad is not one scene. It is a pile of scenes. The art was the seam: which episode follows, where the voice rests, how the story stays whole for someone who cannot see the manuscript. Plato wrote a whole dialogue, the <em>Ion</em>, about a rhapsode who can say the poems and cannot say why. The poems were the point. The performer was the instrument.</p>
+  <p>English later wandered off with the word. A rhapsody became a rush of feeling, then a piece of music. The job underneath stayed the same. Someone still has to carry the text into a voice and keep the parts in order.</p>
+  <p>That is this booth.</p>
+  <p>A web page is already a pile of pieces. A title, some sections, paragraphs, the occasional table. Rhapsode does not write them. It stitches them into speech. Kokoro is the voice. The booth is the room. The playhead is the finger on the line, so you can leave and come back to the same stitch. Mute turns the voice down and leaves that finger where it is. When the reading is worth keeping, the same seam becomes an audiobook: one file, with chapters, which is the old job written down. Proofreading is the rhapsode checking the recitation against the poem and flagging the lines where the voice drifted.</p>
+  <p>The name is a job description. The page, read aloud.</p>
+  <h3>The pieces</h3>
+  <figure>
+    <svg viewBox="0 0 640 390" role="img" aria-label="Class diagram. A Document holds Sections, a Section holds Blocks, build_script makes Utterances, Kokoro speaks them, and LiveHub sends the audio to the booth.">
+      <defs>
+        <marker id="uml-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="#e4c27a"/>
+        </marker>
+      </defs>
+      <g font-family="Outfit, system-ui, sans-serif">
+        <g>
+          <rect x="12" y="16" width="176" height="128" rx="8" fill="#241e18" stroke="#e4c27a"/>
+          <text x="24" y="40" fill="#e4c27a" font-size="15">Document</text>
+          <text x="24" y="64" fill="#f6f0e6" font-size="13">title</text>
+          <text x="24" y="84" fill="#f6f0e6" font-size="13">url</text>
+          <text x="24" y="104" fill="#f6f0e6" font-size="13">site</text>
+          <text x="24" y="124" fill="#f6f0e6" font-size="13">lang</text>
+        </g>
+        <g>
+          <rect x="236" y="28" width="160" height="104" rx="8" fill="#241e18" stroke="#e4c27a"/>
+          <text x="248" y="52" fill="#e4c27a" font-size="15">Section</text>
+          <text x="248" y="76" fill="#f6f0e6" font-size="13">heading</text>
+          <text x="248" y="96" fill="#f6f0e6" font-size="13">level</text>
+          <text x="248" y="116" fill="#f6f0e6" font-size="13">blocks</text>
+        </g>
+        <g>
+          <rect x="456" y="36" width="168" height="88" rx="8" fill="#241e18" stroke="#e4c27a"/>
+          <text x="468" y="60" fill="#e4c27a" font-size="15">Block</text>
+          <text x="468" y="84" fill="#f6f0e6" font-size="13">kind</text>
+          <text x="468" y="104" fill="#f6f0e6" font-size="13">text</text>
+        </g>
+        <line x1="188" y1="80" x2="232" y2="80" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="196" y="72" fill="#b3a38f" font-size="12">1 → *</text>
+        <line x1="396" y1="80" x2="452" y2="80" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="404" y="72" fill="#b3a38f" font-size="12">1 → *</text>
+        <g>
+          <rect x="12" y="220" width="176" height="128" rx="8" fill="#241e18" stroke="#e4c27a"/>
+          <text x="24" y="244" fill="#e4c27a" font-size="15">Utterance</text>
+          <text x="24" y="268" fill="#f6f0e6" font-size="13">text</text>
+          <text x="24" y="288" fill="#f6f0e6" font-size="13">kind</text>
+          <text x="24" y="308" fill="#f6f0e6" font-size="13">section</text>
+          <text x="24" y="328" fill="#f6f0e6" font-size="13">pause</text>
+        </g>
+        <g>
+          <rect x="236" y="236" width="160" height="96" rx="8" fill="#241e18" stroke="#e4c27a"/>
+          <text x="248" y="260" fill="#e4c27a" font-size="15">Narrator</text>
+          <text x="248" y="284" fill="#f6f0e6" font-size="13">Kokoro</text>
+          <text x="248" y="304" fill="#f6f0e6" font-size="13">one line at a time</text>
+        </g>
+        <g>
+          <rect x="456" y="220" width="168" height="128" rx="8" fill="#241e18" stroke="#e4c27a"/>
+          <text x="468" y="244" fill="#e4c27a" font-size="15">LiveHub</text>
+          <text x="468" y="268" fill="#f6f0e6" font-size="13">keeps the place</text>
+          <text x="468" y="288" fill="#f6f0e6" font-size="13">sends the audio</text>
+          <text x="468" y="308" fill="#f6f0e6" font-size="13">to the booth page</text>
+        </g>
+        <line x1="100" y1="144" x2="100" y2="216" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="108" y="186" fill="#b3a38f" font-size="12">build_script</text>
+        <line x1="188" y1="284" x2="232" y2="284" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="192" y="276" fill="#b3a38f" font-size="12">speaks</text>
+        <line x1="396" y1="284" x2="452" y2="284" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="404" y="276" fill="#b3a38f" font-size="12">audio</text>
+      </g>
+    </svg>
+    <figcaption>A page becomes a Document. A document becomes lines. A line becomes sound.</figcaption>
+  </figure>
+  <h3>One reading</h3>
+  <figure>
+    <svg viewBox="0 0 640 470" role="img" aria-label="Sequence diagram. The reader chooses a tab, Chrome returns the page, Kokoro speaks each line, and the booth plays the audio.">
+      <g font-family="Outfit, system-ui, sans-serif">
+        <text x="70" y="24" text-anchor="middle" fill="#e4c27a" font-size="14">You</text>
+        <text x="220" y="24" text-anchor="middle" fill="#e4c27a" font-size="14">Booth</text>
+        <text x="390" y="24" text-anchor="middle" fill="#e4c27a" font-size="14">Chrome</text>
+        <text x="560" y="24" text-anchor="middle" fill="#e4c27a" font-size="14">Kokoro</text>
+        <line x1="70" y1="36" x2="70" y2="452" stroke="#3a3126"/>
+        <line x1="220" y1="36" x2="220" y2="452" stroke="#3a3126"/>
+        <line x1="390" y1="36" x2="390" y2="452" stroke="#3a3126"/>
+        <line x1="560" y1="36" x2="560" y2="452" stroke="#3a3126"/>
+        <line x1="78" y1="62" x2="212" y2="62" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="88" y="54" fill="#f6f0e6" font-size="12">Choose a tab</text>
+        <line x1="228" y1="102" x2="382" y2="102" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="236" y="94" fill="#f6f0e6" font-size="12">which pages are open</text>
+        <line x1="382" y1="142" x2="228" y2="142" stroke="#b3a38f" stroke-dasharray="4 3" marker-end="url(#uml-arrow)"/>
+        <text x="236" y="134" fill="#b3a38f" font-size="12">the list</text>
+        <line x1="78" y1="182" x2="212" y2="182" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="88" y="174" fill="#f6f0e6" font-size="12">this one</text>
+        <line x1="228" y1="222" x2="382" y2="222" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="236" y="214" fill="#f6f0e6" font-size="12">read that tab</text>
+        <line x1="382" y1="262" x2="228" y2="262" stroke="#b3a38f" stroke-dasharray="4 3" marker-end="url(#uml-arrow)"/>
+        <text x="236" y="254" fill="#b3a38f" font-size="12">Document</text>
+        <rect x="200" y="292" width="380" height="150" rx="8" fill="none" stroke="#e4c27a"/>
+        <text x="212" y="312" fill="#e4c27a" font-size="12">each line</text>
+        <line x1="228" y1="348" x2="552" y2="348" stroke="#e4c27a" marker-end="url(#uml-arrow)"/>
+        <text x="300" y="340" fill="#f6f0e6" font-size="12">speak</text>
+        <line x1="552" y1="398" x2="228" y2="398" stroke="#b3a38f" stroke-dasharray="4 3" marker-end="url(#uml-arrow)"/>
+        <text x="330" y="390" fill="#b3a38f" font-size="12">audio</text>
+      </g>
+    </svg>
+    <figcaption>You pick a tab. Chrome hands over the page. Kokoro speaks the lines. The booth plays them, and the level is set before the sound leaves for a speaker, a cast, or whatever else is listening.</figcaption>
+  </figure>
+</dialog>
+<script>
+const playButton = document.querySelector("#play");
+const syncButton = document.querySelector("#sync");
+const state = document.querySelector("#state");
+const script = document.querySelector("#script");
+const speedButtons = [...document.querySelectorAll("[data-speed]")];
+const srcTitle = document.querySelector("#src-title");
+const srcWhere = document.querySelector("#src-where");
+const pickTab = document.querySelector("#pick-tab");
+const tabList = document.querySelector("#tab-list");
+const aboutDialog = document.querySelector("#about");
+document.querySelector("#about-open").addEventListener("click", (event) => {
+  event.preventDefault();
+  aboutDialog.showModal();
+});
+aboutDialog.querySelector(".about-close").addEventListener("click", () => aboutDialog.close());
+const mcpInstance = document.querySelector("#mcp-instance");
+const mcpProfile = document.querySelector("#mcp-profile");
+const mcpTraffic = document.querySelector("#mcp-traffic");
+const mcpDot = document.querySelector("#mcp-dot");
+const seekBackBtn = document.querySelector("#seek-back");
+const seekFwdBtn = document.querySelector("#seek-fwd");
+const trackHead = document.querySelector("#track-head");
+const trackEl = document.querySelector("#track");
+const reelEl = document.querySelector("#reel");
+const sectionsEl = document.querySelector("#sections");
+const ganttEl = document.querySelector("#gantt");
+const sectionNameEl = document.querySelector("#section-name");
+const voiceSelect = document.querySelector("#voice");
+const muteButton = document.querySelector("#mute");
+const levelInput = document.querySelector("#level");
+
+const ctx = new AudioContext();
+// Gain is in front of the sink, so a cast tab or another output device follows it.
+const master = ctx.createGain();
+master.connect(ctx.destination);
+let volume = 1;
+let muted = false;
+
+function applyGain() {
+  const level = muted ? 0 : volume;
+  const now = ctx.currentTime;
+  try {
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(master.gain.value, now);
+    master.gain.linearRampToValueAtTime(Math.max(0, Math.min(1, level)), now + 0.02);
+  } catch (error) {
+    master.gain.value = level;
+  }
+}
+
+function paintVolume() {
+  const percent = Math.round(volume * 100);
+  const silent = muted || volume === 0;
+  levelInput.value = String(percent);
+  levelInput.setAttribute("aria-valuetext", silent ? "Muted" : percent + " percent");
+  muteButton.setAttribute("aria-pressed", silent ? "true" : "false");
+  muteButton.setAttribute("aria-label", silent ? "Unmute" : "Mute");
+  muteButton.title = silent ? "Unmute" : "Mute. The reading keeps its place.";
+  muteButton.classList.toggle("is-silent", silent);
+  document.body.classList.toggle("is-muted", silent);
+  applyGain();
+  try {
+    localStorage.setItem("rhapsode.volume", JSON.stringify({volume, muted}));
+  } catch (error) {
+    /* private mode can refuse storage; the level still applies */
+  }
+}
+
+try {
+  const saved = JSON.parse(localStorage.getItem("rhapsode.volume") || "null");
+  if (saved && typeof saved.volume === "number" && Number.isFinite(saved.volume)) {
+    volume = Math.min(1, Math.max(0, saved.volume));
+  }
+  if (saved && typeof saved.muted === "boolean") muted = saved.muted;
+} catch (error) {
+  /* keep the full level */
+}
+paintVolume();
+
+// ── state ──────────────────────────────────────────────────────────
+let speed = 0.8;
+let transport = "paused";
+let active = null;
+let lines = [];
+
+// Playhead is seconds on the 1.0× timeline. While sounding,
+// playhead = anchor + (ctx.currentTime - anchorCtx) * speed.
+let playhead = 0;
+let anchor = 0;
+let anchorCtx = 0;
+const clips = [];
+let docKey = "";
+let restored = false;
+let marker = null;
+let lastMark = 0;
+const PLACE = "rhapsode.place";
+
+function report(level, message, detail) {
+  const text = "[rhapsode] " + (detail === undefined ? message : message + " " + JSON.stringify(detail));
+  if (level === "error") console.error(text);
+  else if (level === "warn") console.warn(text);
+  else console.info(text);
+}
+
+window.addEventListener("error", (event) => {
+  report("error", event.message || "page error", {source: event.filename, line: event.lineno});
+});
+window.addEventListener("unhandledrejection", (event) => {
+  report("error", "unhandled rejection", {reason: String(event.reason && event.reason.stack || event.reason)});
+});
+
+// ── UI helpers ─────────────────────────────────────────────────────
+
+let voiceName = "Heart";
+
+function label() {
+  const word = transport === "playing" ? "Playing" : "Paused";
+  state.textContent = word + " \u00b7 " + speed.toFixed(1) + "\u00d7 \u00b7 " + voiceName;
+  playButton.textContent = transport === "playing" ? "Pause" : "Play";
+  playButton.setAttribute("aria-pressed", String(transport === "playing"));
+}
+
+let sealFraction = null;
+
+function threadColor(id) {
+  const key = String(id || "");
+  if (key.indexOf("am_") === 0) return "#f6f0e6";
+  if (key.indexOf("bf_") === 0) return "#d5d2a4";
+  if (key.indexOf("bm_") === 0) return "#c46a3a";
+  return "#e4c27a";
+}
+
+function paintThreadColor() {
+  const id = voiceSelect && voiceSelect.value ? voiceSelect.value : "af_heart";
+  document.documentElement.style.setProperty("--thread", threadColor(id));
+}
+
+function wordFraction(word) {
+  const span = Math.max(0.05, Number(word.end) - Number(word.start));
+  const along = (playhead - Number(word.start)) / span;
+  if (!Number.isFinite(along)) return 0;
+  return Math.min(1, Math.max(0, along));
+}
+
+function needleX(seconds) {
+  // One crossing of the seal takes 3 seconds of the reading, then the
+  // needle turns around. A per-word crossing snaps on every short word.
+  const sweep = 3;
+  const trip = ((Number(seconds) || 0) / sweep) % 2;
+  const along = trip <= 1 ? trip : 2 - trip;
+  return 16 + along * 30;
+}
+
+function paintSeal() {
+  paintThreadColor();
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let fraction = sealFraction;
+  if (hotLine >= 0 && hotWord >= 0 && lines[hotLine] && lines[hotLine].words && lines[hotLine].words[hotWord]) {
+    fraction = wordFraction(lines[hotLine].words[hotWord]);
+    sealFraction = fraction;
+  }
+  const spoken = document.querySelector("#script .w-active");
+  if (spoken) spoken.style.setProperty("--stitch", reduce || fraction == null ? "1" : String(fraction));
+  const needle = document.querySelector("#seal-needle");
+  if (!needle) return;
+  const x = reduce ? 36 : needleX(playhead);
+  needle.setAttribute("x1", x.toFixed(2));
+  needle.setAttribute("x2", x.toFixed(2));
+}
+
+async function loadVoices() {
+  try {
+    const res = await fetch("/voices");
+    const data = await res.json();
+    voiceSelect.replaceChildren();
+    let groupName = "";
+    let parent = voiceSelect;
+    for (const voice of data.voices || []) {
+      const item = typeof voice === "string" ? {id: voice, name: voice, group: "Voices", label: voice} : voice;
+      if (item.group !== groupName) {
+        groupName = item.group || "Voices";
+        parent = document.createElement("optgroup");
+        parent.label = groupName;
+        voiceSelect.append(parent);
+      }
+      const opt = document.createElement("option");
+      opt.value = item.id;
+      opt.textContent = item.name;
+      opt.title = item.label || item.name;
+      if (item.id === "af_heart") opt.selected = true;
+      parent.append(opt);
+    }
+    voiceName = voiceSelect.selectedOptions[0] ? voiceSelect.selectedOptions[0].textContent : "Heart";
+    label();
+  } catch {
+    report("warn", "could not fetch voices");
+  }
+}
+
+voiceSelect.addEventListener("change", () => {
+  const voice = voiceSelect.value;
+  voiceName = voiceSelect.selectedOptions[0] ? voiceSelect.selectedOptions[0].textContent : voice;
+  const chosen = voiceSelect.selectedOptions[0];
+  label();
+  const line = lineAtPlayhead();
+  if (socket && socket.readyState === 1) {
+    socket.send(JSON.stringify({type: "voice", value: voice, line}));
+    report("info", "voice changed", {voice, name: voiceName, detail: chosen ? chosen.title : "", line});
+  } else {
+    report("warn", "voice was not sent; the booth is not connected", {voice});
+  }
+});
+
+function applySpeed(next, tell) {
+  const oldSpeed = speed;
+  speed = next;
+  // Re-anchor: compute current playhead before changing speed
+  if (active && transport === "playing") {
+    playhead = anchor + (ctx.currentTime - anchorCtx) * oldSpeed;
+    anchor = playhead;
+    anchorCtx = ctx.currentTime;
+    active.playbackRate.value = speed;
+  } else {
+    if (active) active.playbackRate.value = speed;
+  }
+  for (const btn of speedButtons) {
+    btn.setAttribute("aria-pressed", String(Number(btn.dataset.speed) === speed));
+  }
+  label();
+  if (tell) report("info", "speed", {value: speed});
+  if (tell && socket && socket.readyState === 1) {
+    socket.send(JSON.stringify({type: "speed", value: speed}));
+  }
+}
+
+function setSpeed(next) { applySpeed(next, true); }
+
+function duration() {
+  return clips.length ? clips[clips.length - 1].end : 0;
+}
+
+function clipAt(t) {
+  for (const item of clips) {
+    if (t >= item.start && t < item.end) return item;
+  }
+  for (const item of clips) {
+    if (item.start >= t) return item;
+  }
+  return null;
+}
+
+function now() {
+  if (transport === "playing" && active) {
+    playhead = anchor + (ctx.currentTime - anchorCtx) * speed;
+  }
+  return playhead;
+}
+
+function stopNode() {
+  if (!active) return;
+  active.onended = null;
+  try { active.stop(); } catch (e) {}
+  active = null;
+}
+
+function remember(force) {
+  if (!docKey) return;
+  const nowMs = Date.now();
+  if (!force && nowMs - lastMark < 1000) return;
+  lastMark = nowMs;
+  const place = {id: docKey, playhead: Math.round(playhead * 1000) / 1000, speed, at: nowMs};
+  try { localStorage.setItem(PLACE, JSON.stringify(place)); } catch (error) {
+    report("warn", "could not store place", {message: String(error)});
+  }
+  if (socket && socket.readyState === 1) {
+    socket.send(JSON.stringify({type: "place", playhead: place.playhead, speed}));
+  }
+}
+
+function storedPlace(id) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLACE) || "null");
+    if (saved && saved.id === id && Number.isFinite(saved.playhead)) return saved;
+  } catch (error) {
+    report("warn", "could not read place", {message: String(error)});
+  }
+  return null;
+}
+
+function begin(t) {
+  stopNode();
+  const limit = duration();
+  const requested = Math.max(0, t);
+  if (marker != null && limit + 0.25 < marker && Math.abs(requested - marker) < 0.5) {
+    playhead = marker;
+    anchor = playhead;
+    anchorCtx = ctx.currentTime;
+    paint();
+    remember(false);
+    return;
+  }
+  marker = null;
+  playhead = limit > 0 ? Math.min(requested, limit) : requested;
+  anchor = playhead;
+  anchorCtx = ctx.currentTime;
+  paint();
+  remember(false);
+  if (transport !== "playing") return;
+  const clip = clipAt(playhead);
+  if (!clip) return;
+  if (playhead < clip.start) {
+    playhead = clip.start;
+    anchor = playhead;
+  }
+  const node = ctx.createBufferSource();
+  node.buffer = clip.buffer;
+  node.playbackRate.value = speed;
+  node.connect(master);
+  const offset = Math.max(0, Math.min(playhead - clip.start, Math.max(0, clip.buffer.duration - 0.02)));
+  node.onended = () => {
+    if (active !== node) return;
+    active = null;
+    begin(clip.end);
+  };
+  active = node;
+  try {
+    node.start(0, offset);
+  } catch (error) {
+    report("error", "playback failed to start", {message: String(error), offset, index: clip.index});
+    active = null;
+  }
+}
+
+let shownLine = -1;
+let hotLine = -1;
+let hotWord = -1;
+let dragging = false;
+let hoverSection = -1;
+const PX = 18;
+
+function sectionGroups() {
+  const groups = [];
+  let group = null;
+  lines.forEach((line, index) => {
+    if (!group || line.kind === "heading") {
+      group = {title: line.text || "", start: line.start, end: line.end, heading: line.kind === "heading", from: index, to: index + 1};
+      groups.push(group);
+    } else {
+      group.to = index + 1;
+      if (line.end != null) group.end = line.end;
+    }
+    if (group.start == null && line.start != null) group.start = line.start;
+  });
+  return groups;
+}
+
+function sectionWeight(section, secondsPerLine) {
+  if (section.start != null && section.end != null && section.end > section.start) {
+    return section.end - section.start;
+  }
+  return Math.max(1, section.to - section.from) * secondsPerLine;
+}
+
+function sectionScale(groups) {
+  let timedSeconds = 0;
+  let timedLines = 0;
+  for (const section of groups) {
+    if (section.start != null && section.end != null && section.end > section.start) {
+      timedSeconds += section.end - section.start;
+      timedLines += Math.max(1, section.to - section.from);
+    }
+  }
+  const secondsPerLine = timedLines ? timedSeconds / timedLines : 8;
+  const weights = groups.map((section) => sectionWeight(section, secondsPerLine));
+  const total = weights.reduce((sum, weight) => sum + weight, 0) || 1;
+  return {weights, total};
+}
+
+function sectionAtPlayhead(groups) {
+  let found = groups.length ? 0 : -1;
+  for (let i = 0; i < groups.length; i++) {
+    const section = groups[i];
+    if (section.start == null) continue;
+    if (playhead + 0.05 >= section.start) found = i;
+    if (section.end != null && playhead >= section.start && playhead < section.end) return i;
+  }
+  return found;
+}
+
+function playheadFraction(groups, weights, total) {
+  let before = 0;
+  for (let i = 0; i < groups.length; i++) {
+    const section = groups[i];
+    const weight = weights[i];
+    if (section.start != null && section.end != null && section.end > section.start) {
+      if (playhead <= section.end) {
+        const span = section.end - section.start;
+        const along = Math.min(1, Math.max(0, (playhead - section.start) / span));
+        return (before + weight * along) / total;
+      }
+      before += weight;
+      continue;
+    }
+    return before / total;
+  }
+  return 1;
+}
+
+function lineItem(index) {
+  if (index < 0) return null;
+  return script.querySelector('li[data-index="' + index + '"]');
+}
+
+function jumpSection(index) {
+  const section = sectionGroups()[index];
+  if (!section) return;
+  const item = lineItem(section.from);
+  if (item) item.scrollIntoView({block: "center", inline: "nearest"});
+  if (section.start != null) begin(section.start);
+}
+
+function placeWave() {
+  const row = document.querySelector("#wave-row");
+  if (!row) return;
+  const line = lineItem(hotLine);
+  if (!line) return;
+  if (line.nextElementSibling !== row) line.after(row);
+}
+
+function syncToPlaying() {
+  const groups = sectionGroups();
+  const sectionIndex = sectionAtPlayhead(groups);
+  const section = sectionIndex >= 0 ? groups[sectionIndex] : null;
+  const index = hotLine >= 0 ? hotLine : (section ? section.from : -1);
+  placeWave();
+  const line = lineItem(index);
+  const target = line || document.querySelector("#wave-row");
+  if (target) target.scrollIntoView({block: "center", inline: "nearest"});
+}
+
+function clipAtPlayhead() {
+  let found = null;
+  for (let i = 0; i < clips.length; i++) {
+    const clip = clips[i];
+    if (clip.start == null || clip.end == null) continue;
+    if (playhead >= clip.start && playhead < clip.end) return clip;
+    if (clip.start <= playhead) found = clip;
+  }
+  return found;
+}
+
+function wavePeaks(clip, columns) {
+  if (clip.peaks && clip.peakColumns === columns) return clip.peaks;
+  const data = clip.buffer.getChannelData(0);
+  const peaks = new Array(columns);
+  const step = Math.max(1, Math.floor(data.length / columns));
+  for (let i = 0; i < columns; i++) {
+    let peak = 0;
+    const from = i * step;
+    const to = Math.min(data.length, from + step);
+    for (let s = from; s < to; s++) {
+      const value = data[s] < 0 ? -data[s] : data[s];
+      if (value > peak) peak = value;
+    }
+    peaks[i] = peak;
+  }
+  clip.peakColumns = columns;
+  clip.peaks = peaks;
+  return peaks;
+}
+
+function paintWave() {
+  const canvas = document.querySelector("#wave");
+  if (!canvas) return;
+  const cssWidth = canvas.clientWidth || 640;
+  const cssHeight = canvas.clientHeight || 38;
+  const ratio = window.devicePixelRatio || 1;
+  const width = Math.max(1, Math.round(cssWidth * ratio));
+  const height = Math.max(1, Math.round(cssHeight * ratio));
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  const pen = canvas.getContext("2d");
+  if (!pen) return;
+  pen.clearRect(0, 0, width, height);
+  pen.fillStyle = "#2a241c";
+  pen.fillRect(0, 0, width, height);
+  const clip = clipAtPlayhead();
+  const silent = document.body.classList.contains("is-muted");
+  const mid = height / 2;
+  if (clip && clip.buffer && !silent) {
+    const columns = Math.max(48, Math.round(cssWidth / 4));
+    const peaks = wavePeaks(clip, columns);
+    pen.fillStyle = "#e4c27a";
+    const colW = width / columns;
+    for (let i = 0; i < columns; i++) {
+      const bar = Math.max(ratio, peaks[i] * (height * 0.86));
+      pen.fillRect(i * colW, mid - bar / 2, Math.max(ratio, colW - ratio), bar);
+    }
+  } else {
+    pen.strokeStyle = "#e4c27a";
+    pen.lineWidth = Math.max(1, ratio);
+    pen.beginPath();
+    pen.moveTo(0, mid);
+    pen.lineTo(width, mid);
+    pen.stroke();
+  }
+  if (!clip || clip.start == null || clip.end == null || clip.end <= clip.start) return;
+  const along = (playhead - clip.start) / (clip.end - clip.start);
+  const x = Math.min(width, Math.max(0, along * width));
+  pen.fillStyle = "#e23b2f";
+  pen.fillRect(x, 0, Math.max(2, ratio * 2), height);
+}
+
+let shownSection = -1;
+
+function sectionFill(section, index, current) {
+  if (current < 0 || index > current) return 0;
+  if (index < current) return 1;
+  if (section.start == null || section.end == null || section.end <= section.start) return 0;
+  const along = (playhead - section.start) / (section.end - section.start);
+  if (!Number.isFinite(along)) return 0;
+  return Math.min(1, Math.max(0, along));
+}
+
+function slideSectionName(name, current) {
+  const crossed = shownSection >= 0 && current >= 0 && current !== shownSection;
+  const entered = current >= 0 && current !== shownSection;
+  if (sectionNameEl.textContent !== name) sectionNameEl.textContent = name;
+  if (!entered) return;
+  shownSection = current;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (crossed) {
+    ganttEl.classList.remove("stitch-flash");
+    void ganttEl.offsetWidth;
+    ganttEl.classList.add("stitch-flash");
+  }
+  sectionNameEl.classList.remove("slide");
+  void sectionNameEl.offsetWidth;
+  sectionNameEl.classList.add("slide");
+}
+
+function paintGantt(groups) {
+  const bars = ganttEl.querySelectorAll(".gantt-bar").length;
+  if (bars !== groups.length) {
+    ganttEl.replaceChildren();
+    groups.forEach((section, index) => {
+      const bar = document.createElement("button");
+      bar.type = "button";
+      bar.className = "gantt-bar" + (section.heading ? " head" : "");
+      const fill = document.createElement("span");
+      fill.className = "gantt-fill";
+      const label = document.createElement("span");
+      label.className = "gantt-label";
+      bar.append(fill, label);
+      bar.addEventListener("pointerenter", () => { hoverSection = index; });
+      bar.addEventListener("pointerleave", () => { if (hoverSection === index) hoverSection = -1; });
+      bar.addEventListener("click", () => jumpSection(index));
+      ganttEl.append(bar);
+    });
+    const head = document.createElement("div");
+    head.id = "gantt-head";
+    ganttEl.append(head);
+  }
+  const {weights, total} = sectionScale(groups);
+  const width = ganttEl.clientWidth || 1;
+  const current = sectionAtPlayhead(groups);
+  const shown = hoverSection >= 0 && hoverSection < groups.length ? hoverSection : current;
+  groups.forEach((section, index) => {
+    const bar = ganttEl.children[index];
+    bar.style.flexGrow = String(weights[index]);
+    bar.title = section.title;
+    bar.setAttribute("aria-label", section.title);
+    const text = (weights[index] / total) * width >= 76 ? section.title : "";
+    const labelEl = bar.querySelector(".gantt-label");
+    if (labelEl && labelEl.textContent !== text) labelEl.textContent = text;
+    bar.style.paddingInline = text ? "0.4rem" : "0";
+    bar.classList.toggle("current", index === current);
+    if (index === current) bar.setAttribute("aria-current", "true");
+    else bar.removeAttribute("aria-current");
+    const fill = bar.querySelector(".gantt-fill");
+    if (fill) fill.style.width = (sectionFill(section, index, current) * 100) + "%";
+  });
+  const head = document.querySelector("#gantt-head");
+  if (head) head.style.left = (playheadFraction(groups, weights, total) * 100) + "%";
+  const name = shown >= 0 && groups[shown] ? groups[shown].title : "";
+  slideSectionName(name, current);
+}
+
+function paintTrack() {
+  const groups = sectionGroups();
+  if (sectionsEl.childElementCount !== groups.length) {
+    sectionsEl.replaceChildren();
+    for (const section of groups) {
+      const el = document.createElement("div");
+      el.className = "section" + (section.heading ? " head" : "");
+      el.title = section.title;
+      sectionsEl.append(el);
+    }
+  }
+  groups.forEach((section, index) => {
+    const seconds = section.start != null && section.end != null
+      ? Math.max(0.3, section.end - section.start)
+      : 2;
+    const el = sectionsEl.children[index];
+    el.style.flex = "none";
+    el.style.width = (seconds * PX) + "px";
+  });
+  paintGantt(groups);
+}
+
+function paint() {
+  trackHead.style.left = (playhead * PX) + "px";
+  if (!dragging) {
+    const x = playhead * PX;
+    const view = trackEl.clientWidth;
+    const left = trackEl.scrollLeft;
+    if (x < left + 24 || x > left + view - 24) {
+      trackEl.scrollLeft = Math.max(0, x - view * 0.35);
+    }
+  }
+  let lineIndex = -1;
+  let wordIndex = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const words = lines[i].words;
+    if (words) {
+      for (let j = 0; j < words.length; j++) {
+        if (playhead >= words[j].start && playhead < words[j].end) {
+          lineIndex = i;
+          wordIndex = j;
+          break;
+        }
+      }
+    }
+    if (lineIndex >= 0) break;
+    if (lines[i].start != null && playhead >= lines[i].start && playhead < lines[i].end) lineIndex = i;
+  }
+  if (lineIndex !== hotLine || wordIndex !== hotWord) {
+    const previous = script.querySelector(".w-active");
+    if (previous) previous.classList.remove("w-active");
+    for (const item of script.children) {
+      const on = Number(item.dataset.index) === lineIndex;
+      if (on) item.setAttribute("aria-current", "true");
+      else item.removeAttribute("aria-current");
+    }
+    if (lineIndex >= 0 && wordIndex >= 0) {
+      const span = lineItem(lineIndex)?.querySelectorAll(".words span")[wordIndex];
+      if (span) span.classList.add("w-active");
+    }
+    hotLine = lineIndex;
+    hotWord = wordIndex;
+  }
+  if (lineIndex !== shownLine) shownLine = lineIndex;
+  placeWave();
+  paintGantt(sectionGroups());
+  paintSeal();
+  paintWave();
+}
+
+function tick() {
+  if (transport === "playing" && active && !dragging) now();
+  paint();
+  if (transport === "playing") remember(false);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// ── rendering ─────────────────────────────────────────────────────
+
+function renderLines() {
+  const waveRow = document.querySelector("#wave-row");
+  script.replaceChildren();
+  lines.forEach((line, index) => {
+    const item = document.createElement("li");
+    item.dataset.index = String(index);
+    item.dataset.status = line.status || "pending";
+    item.dataset.kind = line.kind || "text";
+    const kind = document.createElement("span");
+    kind.className = "kind";
+    kind.textContent = line.kind || "text";
+    const words = document.createElement("span");
+    words.className = "words";
+    words.textContent = line.text || "";
+    item.append(kind, words, exportButton(line, index));
+    script.append(item);
+    if (line.words && line.words.length) fillWords(index);
+  });
+  if (waveRow) script.append(waveRow);
+  paintTrack();
+  sealFraction = null;
+  shownSection = -1;
+}
+
+function fillWords(index) {
+  const item = script.querySelector('[data-index="' + index + '"]');
+  if (!item) return;
+  const holder = item.querySelector(".words");
+  if (index === hotLine) hotLine = -1;
+  holder.replaceChildren();
+  for (const word of lines[index].words || []) {
+    const span = document.createElement("span");
+    span.textContent = word.text + " ";
+    holder.append(span);
+  }
+}
+
+function formatBytes(n) {
+  n = Number(n) || 0;
+  if (n < 1024) return n + " B";
+  if (n < 1048576) return (n / 1024).toFixed(1) + " KB";
+  if (n < 1073741824) return (n / 1048576).toFixed(1) + " MB";
+  return (n / 1073741824).toFixed(1) + " GB";
+}
+
+function shortLink(url) {
+  const bare = String(url || "").replace(/^https?:\/\//, "").split("#")[0].split("?")[0];
+  const parts = bare.split("/").filter(Boolean);
+  if (parts.length <= 2) return bare;
+  return parts[0] + "/\u2026/" + parts[parts.length - 1];
+}
+
+function showPage(source, title) {
+  sourceView = source || {};
+  const raw = sourceView.label || "";
+  const name = sourceView.detail || title || "";
+  srcTitle.textContent = name || "Waiting for a page\u2026";
+  const href = raw.startsWith("http") ? raw : "";
+  if (href) {
+    srcWhere.hidden = false;
+    srcWhere.textContent = shortLink(href);
+    srcWhere.href = href;
+    srcWhere.target = "_blank";
+    srcWhere.rel = "noopener";
+  } else {
+    srcWhere.hidden = true;
+    srcWhere.removeAttribute("href");
+    srcWhere.textContent = "";
+  }
+  paintSource();
+}
+
+let speechTokens = 0;
+let readingGeneration = 0;
+let mcpView = {};
+let sourceView = {};
+
+function formatTokens(n) {
+  return Math.max(0, Number(n) || 0).toLocaleString("en-US");
+}
+
+function paintTraffic() {
+  const connected = !!mcpView.connected;
+  const inn = Number(mcpView.bytes_in) || 0;
+  const out = Number(mcpView.bytes_out) || 0;
+  if (inn > 0) mcpTraffic.dataset.inn = String(inn);
+  if (out > 0) mcpTraffic.dataset.out = String(out);
+  const parts = [];
+  if (connected) {
+    parts.push("In " + formatBytes(inn || Number(mcpTraffic.dataset.inn) || 0) + " \u00b7 Out " + formatBytes(out || Number(mcpTraffic.dataset.out) || 0));
+  }
+  parts.push("Speech " + formatTokens(speechTokens) + " tokens");
+  mcpTraffic.textContent = parts.join(" \u00b7 ");
+}
+
+function sourceHost(label) {
+  return String(label || "").replace(/^https?:\/\//, "").split(/[/?#]/)[0];
+}
+
+function sourceFile(label) {
+  const parts = String(label || "").split(/[\\/]/).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : "";
+}
+
+function chromeProfile() {
+  const profile = mcpView.profile || "";
+  const quiet = {
+    "": true,
+    "Looking…": true,
+    "Looking for the source…": true,
+    "Not connected": true,
+    "Profile unknown": true,
+    "No Chrome connection": true,
+    "The text came from a file.": true,
+  };
+  return quiet[profile] ? "" : profile;
+}
+
+function paintSource() {
+  const site = (sourceView.site || "").trim();
+  const kind = sourceView.kind || "";
+  const label = sourceView.label || "";
+  const host = sourceHost(label);
+  const profile = chromeProfile();
+  const account = (mcpView.account || "").trim();
+  const page = kind === "page" || label.startsWith("http");
+  let headline = "";
+  if (site) headline = site;
+  else if (page && host) headline = host;
+  else if (profile) headline = profile;
+  else if (label) headline = sourceFile(label) || "Saved document";
+  else headline = "Looking for the source…";
+  const sub = [];
+  if (host && host !== headline) sub.push(host);
+  if (profile && profile !== headline) sub.push(profile);
+  if (account && account !== headline && account !== profile) sub.push(account);
+  mcpInstance.textContent = headline;
+  mcpProfile.textContent = sub.join(" \u00b7 ");
+  paintTraffic();
+  mcpDot.classList.toggle("connected", !!mcpView.connected);
+  mcpDot.classList.toggle("active", !!mcpView.active);
+}
+
+function updateMcp(mcp) {
+  mcpView = mcp || {};
+  if (mcpView.page_url || mcpView.page_identity) {
+    showPage({
+      label: mcpView.page_url || sourceView.label || "",
+      detail: mcpView.page_detail || sourceView.detail || "",
+      kind: sourceView.kind || "page",
+      site: sourceView.site || "",
+      identity: mcpView.page_identity || sourceView.identity || "",
+    }, "");
+    return;
+  }
+  paintSource();
+}
+
+function sameReading(msg) {
+  const generation = msg.generation == null ? 0 : msg.generation;
+  return generation === readingGeneration;
+}
+
+function tabNote(text) {
+  tabList.replaceChildren();
+  const note = document.createElement("p");
+  note.className = "tab-note";
+  note.textContent = text;
+  tabList.append(note);
+  tabList.hidden = false;
+}
+
+function renderTabs(tabs) {
+  tabList.replaceChildren();
+  if (!tabs.length) {
+    tabNote("No open tabs. Leave Chrome open on the page you want.");
+    return;
+  }
+  for (const tab of tabs) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "tab";
+    const title = document.createElement("span");
+    title.className = "tab-title";
+    title.textContent = tab.title || shortLink(tab.url);
+    button.append(title);
+    if (tab.title) {
+      const where = document.createElement("span");
+      where.className = "tab-url";
+      where.textContent = shortLink(tab.url);
+      button.append(where);
+    }
+    button.title = tab.url;
+    button.addEventListener("click", () => chooseTab(tab.url));
+    tabList.append(button);
+  }
+  tabList.hidden = false;
+}
+
+async function chooseTab(url) {
+  pickTab.disabled = true;
+  tabNote("Reading this tab…");
+  try {
+    const response = await fetch("/tab", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({url}),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.error || "Could not read that tab");
+  } catch (error) {
+    tabNote(error.message || "Could not read that tab");
+    pickTab.disabled = false;
+  }
+}
+
+pickTab.addEventListener("click", async () => {
+  if (!tabList.hidden && tabList.querySelector(".tab")) {
+    tabList.hidden = true;
+    return;
+  }
+  pickTab.disabled = true;
+  pickTab.textContent = "Looking…";
+  tabNote("Looking at Chrome…");
+  try {
+    const response = await fetch("/tabs");
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.error || "Could not list Chrome tabs");
+    renderTabs(body.tabs || []);
+  } catch (error) {
+    tabNote(error.message || "Could not list Chrome tabs");
+  } finally {
+    pickTab.disabled = false;
+    pickTab.textContent = "Choose tab";
+  }
+});
+
+function replaceDocument(session) {
+  stopNode();
+  clips.length = 0;
+  pending = null;
+  lines = session.lines || [];
+  shownLine = -1;
+  hotLine = -1;
+  hotWord = -1;
+  if (typeof session.speech_tokens === "number") speechTokens = session.speech_tokens;
+  if (typeof session.speed === "number") applySpeed(session.speed, false);
+  const source = session.source || {};
+  docKey = source.label || session.title || "";
+  const local = storedPlace(docKey);
+  const saved = Number(local && local.playhead);
+  playhead = Number.isFinite(saved) ? saved : 0;
+  anchor = playhead;
+  anchorCtx = ctx.currentTime;
+  marker = playhead > 0 ? playhead : null;
+  restored = true;
+  showPage(source, session.title || "");
+  renderLines();
+  paint();
+  tabList.hidden = true;
+  pickTab.disabled = false;
+  pickTab.textContent = "Choose tab";
+}
+
+function renderState(session) {
+  const source = session.source || {};
+  showPage(source, session.title || "");
+  if (typeof session.generation === "number") readingGeneration = session.generation;
+  if (typeof session.speech_tokens === "number") speechTokens = session.speech_tokens;
+
+  updateMcp(session.mcp || {});
+
+  if (session.transport && session.transport !== transport) {
+    transport = session.transport;
+    label();
+    if (transport === "playing" && ctx.state === "suspended") ctx.resume();
+    if (transport === "paused" && ctx.state === "running") ctx.suspend();
+  }
+  clips.length = 0;
+  lines = session.lines || [];
+  const sourceId = source.label || session.title || "";
+  if (!restored && sourceId) {
+    docKey = sourceId;
+    const local = storedPlace(sourceId);
+    const remote = session.place && session.place.id === sourceId ? session.place : null;
+    const place = local || remote;
+    if (place && Number.isFinite(place.playhead) && place.playhead > 0) {
+      marker = place.playhead;
+      playhead = place.playhead;
+      anchor = playhead;
+      if (place.speed) applySpeed(place.speed, false);
+      report("info", "restored place", {playhead, speed});
+    }
+    restored = true;
+    remember(true);
+  }
+  renderLines();
+  shownLine = -1;
+  hotLine = -1;
+  paint();
+}
+
+// ── Audio pipeline ─────────────────────────────────────────────────
+
+function enqueue(meta, pcm) {
+  if (!pcm.length) {
+    report("warn", "empty audio frame", {index: meta.index});
+    return;
+  }
+  if (meta.start == null || meta.end == null) {
+    report("error", "audio frame missing start or end", {index: meta.index});
+  }
+  if (!meta.words || !meta.words.length) {
+    report("warn", "audio frame has no word times", {index: meta.index});
+  }
+  let buffer;
+  try {
+    buffer = ctx.createBuffer(1, pcm.length, 24000);
+    buffer.copyToChannel(pcm, 0);
+  } catch (error) {
+    report("error", "could not buffer audio", {index: meta.index, message: String(error)});
+    return;
+  }
+  clips.push({index: meta.index, start: meta.start, end: meta.end, buffer});
+  if (lines[meta.index]) {
+    lines[meta.index].start = meta.start;
+    lines[meta.index].end = meta.end;
+    lines[meta.index].words = meta.words || [];
+    fillWords(meta.index);
+  }
+  paintTrack();
+  if (marker != null && duration() + 0.25 >= marker) {
+    const there = marker;
+    marker = null;
+    playhead = there;
+    anchor = playhead;
+    paint();
+    if (transport === "playing" && !active) begin(playhead);
+    return;
+  }
+  if (transport === "playing" && !active) begin(playhead);
+}
+
+// ── WebSocket protocol ─────────────────────────────────────────────
+
+let socket;
+
+function connect() {
+  socket = new WebSocket(
+    (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws"
+  );
+  socket.binaryType = "arraybuffer";
+  let pending = null;
+
+  socket.onopen = () => {
+    report("info", "socket open", {speed, playhead});
+    if (docKey) remember(true);
+  };
+  socket.onclose = (event) => {
+    report("warn", "socket closed", {code: event.code, reason: event.reason || ""});
+    setTimeout(connect, 1000);
+  };
+  socket.onerror = () => report("error", "socket error");
+
+  socket.onmessage = (event) => {
+    if (typeof event.data === "string") {
+      let msg;
+      try {
+        msg = JSON.parse(event.data);
+      } catch (error) {
+        report("error", "bad socket message", {message: String(error)});
+        return;
+      }
+      if (msg.type === "log") {
+        report(msg.level === "error" || msg.level === "warn" ? msg.level : "info", msg.message);
+      }
+      if (msg.type === "mcp") updateMcp(msg);
+      if (msg.type === "speech" && typeof msg.tokens === "number") {
+        speechTokens = msg.tokens;
+        paintTraffic();
+      }
+      if (msg.type === "state") {
+        report("info", "state", {
+          speed: msg.speed,
+          transport: msg.transport,
+          lines: (msg.lines || []).length,
+          mcp: !!(msg.mcp && msg.mcp.connected),
+        });
+        if (msg.voice && msg.voice !== voiceSelect.value) {
+          voiceSelect.value = msg.voice;
+          report("info", "voice synced", {voice: msg.voice});
+        }
+        renderState(msg);
+      }
+      if (msg.type === "document") {
+        readingGeneration = msg.generation == null ? readingGeneration : msg.generation;
+        if (msg.voice && msg.voice !== voiceSelect.value) voiceSelect.value = msg.voice;
+        replaceDocument(msg);
+      }
+      if (msg.type === "progress" && sameReading(msg) && lines[msg.index]) {
+        lines[msg.index].status = msg.status;
+        const item = script.querySelector('[data-index="' + msg.index + '"]');
+        if (item) item.dataset.status = msg.status;
+      }
+      if (msg.type === "control") applyControl(msg);
+      if (msg.type === "cut" && sameReading(msg)) cutFrom(msg.from || 0);
+      if (msg.type === "audio" && sameReading(msg)) pending = msg;
+      return;
+    }
+    if (!pending) {
+      report("error", "audio bytes arrived without a header", {bytes: event.data.byteLength});
+      return;
+    }
+    try {
+      enqueue(pending, new Float32Array(event.data));
+    } catch (error) {
+      report("error", "audio enqueue failed", {index: pending.index, message: String(error)});
+    }
+    pending = null;
+  };
+}
+
+// ── Controls ───────────────────────────────────────────────────────
+
+function timeAt(event) {
+  const rect = trackEl.getBoundingClientRect();
+  const x = event.clientX - rect.left + trackEl.scrollLeft;
+  return Math.min(duration(), Math.max(0, x / PX));
+}
+
+function applyControl(msg) {
+  if (typeof msg.speed === "number" && msg.speed > 0 && msg.speed !== speed) applySpeed(msg.speed, false);
+  if (msg.voice && voiceSelect && voiceSelect.value !== msg.voice) {
+    voiceSelect.value = msg.voice;
+    const chosen = voiceSelect.selectedOptions[0];
+    voiceName = chosen ? chosen.textContent : msg.voice;
+    label();
+  }
+  if (typeof msg.seek === "number") begin(msg.seek);
+  if ((msg.transport === "playing" || msg.transport === "paused") && msg.transport !== transport) {
+    const playing = msg.transport === "playing";
+    if (!playing && active) playhead = now();
+    transport = msg.transport;
+    label();
+    report("info", playing ? "play" : "pause", {playhead, remote: true});
+    if (playing) {
+      ctx.resume().then(() => begin(playhead)).catch((error) => {
+        report("error", "audio context did not resume", {message: String(error)});
+      });
+    } else {
+      stopNode();
+      ctx.suspend();
+      paint();
+      remember(true);
+    }
+  }
+}
+
+syncButton.addEventListener("click", () => syncToPlaying());
+
+playButton.addEventListener("click", async () => {
+  const playing = transport !== "playing";
+  if (!playing && active) playhead = now();
+  transport = playing ? "playing" : "paused";
+  label();
+  report("info", playing ? "play" : "pause", {playhead});
+  if (playing) {
+    try {
+      await ctx.resume();
+    } catch (error) {
+      report("error", "audio context did not resume", {message: String(error)});
+    }
+    begin(playhead);
+  } else {
+    stopNode();
+    await ctx.suspend();
+    paint();
+    remember(true);
+  }
+  if (socket && socket.readyState === 1) {
+    socket.send(JSON.stringify({type: "transport", action: playing ? "play" : "pause"}));
+  }
+});
+
+muteButton.addEventListener("click", () => {
+  if (muted || volume === 0) {
+    muted = false;
+    if (volume === 0) volume = 1;
+  } else {
+    muted = true;
+  }
+  paintVolume();
+});
+
+levelInput.addEventListener("input", () => {
+  volume = Math.min(1, Math.max(0, Number(levelInput.value) / 100));
+  if (volume > 0) muted = false;
+  paintVolume();
+});
+
+seekBackBtn.addEventListener("click", () => begin(now() - 15));
+seekFwdBtn.addEventListener("click", () => begin(now() + 15));
+
+trackEl.addEventListener("pointerdown", (event) => {
+  dragging = true;
+  trackEl.setPointerCapture(event.pointerId);
+  begin(timeAt(event));
+});
+trackEl.addEventListener("pointermove", (event) => {
+  if (!dragging) return;
+  begin(timeAt(event));
+});
+trackEl.addEventListener("pointerup", () => { dragging = false; });
+trackEl.addEventListener("pointercancel", () => { dragging = false; });
+
+script.addEventListener("click", (event) => {
+  const item = event.target.closest("li");
+  if (!item || item.id === "wave-row") return;
+  const line = lines[Number(item.dataset.index)];
+  if (line && line.start != null) begin(line.start);
+});
+
+for (const btn of speedButtons) {
+  btn.addEventListener("click", () => setSpeed(Number(btn.dataset.speed)));
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.code === "Space" && event.target === document.body) {
+    event.preventDefault();
+    playButton.click();
+  }
+});
+
+function cutFrom(index) {
+  const kept = clips.filter((clip) => clip.index < index);
+  clips.length = 0;
+  kept.forEach((clip) => clips.push(clip));
+  stopNode();
+  let restart = null;
+  for (let i = index; i < lines.length; i++) {
+    if (restart == null && lines[i].start != null) restart = lines[i].start;
+    lines[i].start = null;
+    lines[i].end = null;
+    lines[i].words = null;
+    lines[i].status = "pending";
+    const item = script.querySelector('[data-index="' + i + '"]');
+    if (!item) continue;
+    item.dataset.status = "pending";
+    const holder = item.querySelector(".words");
+    if (holder) holder.textContent = lines[i].text || "";
+  }
+  hotLine = -1;
+  hotWord = -1;
+  if (restart != null) {
+    playhead = restart;
+    anchor = playhead;
+    anchorCtx = ctx.currentTime;
+  }
+  paintTrack();
+  paint();
+  report("info", "resaying from this line in the new voice", {line: index, playhead});
+  if (transport === "playing") begin(playhead);
+}
+
+function lineAtPlayhead() {
+  let found = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.start == null) continue;
+    if (playhead >= line.start && (line.end == null || playhead < line.end)) return i;
+    if (line.start <= playhead) found = i;
+  }
+  return found;
+}
+
+const KIND_NAME = {heading: "section", p: "paragraph", li: "list item", quote: "quotation", code: "code block", table: "table"};
+
+function exportButton(line, index) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "export";
+  button.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 3v10.2l3.3-3.3 1.4 1.4L12 16.9 7.3 11.3l1.4-1.4 3.3 3.3V3zM5 19h14v2H5z"/></svg>';
+  const heading = line.kind === "heading";
+  const what = KIND_NAME[line.kind] || "block";
+  const title = (line.text || "").replace(/\s+/g, " ").trim();
+  button.title = heading
+    ? "Export section: " + (title || "heading")
+    : "Export this " + what + (title ? ": " + title.slice(0, 72) : "");
+  button.setAttribute("aria-label", button.title);
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (heading) {
+      const group = sectionGroups().find((item) => item.from === index);
+      const from = group ? group.from : index;
+      const to = group ? group.to : index + 1;
+      exportWav(from, to, wavName(title || "section"));
+      return;
+    }
+    exportWav(index, index + 1, wavName(title.slice(0, 48) || what));
+  });
+  return button;
+}
+
+function wavName(title) {
+  const slug = (title || "rhapsode").replace(/[^\w.]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+  return (slug || "rhapsode") + ".wav";
+}
+
+function wavHeader(frames, rate) {
+  const bytes = frames * 2;
+  const buffer = new ArrayBuffer(44);
+  const view = new DataView(buffer);
+  const text = (offset, value) => {
+    for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
+  };
+  text(0, "RIFF");
+  view.setUint32(4, 36 + bytes, true);
+  text(8, "WAVE");
+  text(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  text(36, "data");
+  view.setUint32(40, bytes, true);
+  return new Uint8Array(buffer);
+}
+
+function saveBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.append(link);
+  link.click();
+  setTimeout(() => {
+    link.remove();
+    URL.revokeObjectURL(url);
+  }, 180000);
+}
+
+function exportFromClips(from, to, name) {
+  const latest = new Map();
+  for (const clip of clips) {
+    if (clip.index >= from && clip.index < to) latest.set(clip.index, clip);
+  }
+  const pieces = [...latest.keys()].sort((a, b) => a - b).map((index) => latest.get(index));
+  if (!pieces.length) {
+    report("warn", "nothing to export yet", {from, to, name});
+    return;
+  }
+  if (pieces.length < to - from) {
+    report("warn", "export skipped lines that have not been spoken", {name, lines: pieces.length, wanted: to - from});
+  }
+  const frames = pieces.reduce((sum, clip) => sum + clip.buffer.length, 0);
+  const wav = new Uint8Array(44 + frames * 2);
+  wav.set(wavHeader(frames, 24000), 0);
+  const view = new DataView(wav.buffer);
+  let offset = 44;
+  for (const clip of pieces) {
+    const data = clip.buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const sample = Math.max(-1, Math.min(1, data[i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+      offset += 2;
+    }
+  }
+  saveBlob(new Blob([wav], {type: "audio/wav"}), name);
+  report("info", "exported wav from the page", {name, seconds: Math.round(frames / 24000)});
+}
+
+function exportWav(from, to, name) {
+  let seconds = null;
+  for (let i = from; i < to; i++) {
+    const line = lines[i];
+    if (!line || line.start == null || line.end == null) continue;
+    seconds = (seconds || 0) + (line.end - line.start);
+  }
+  const url = "/export.wav?from=" + from + "&to=" + to + "&name=" + encodeURIComponent(name);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  report("info", "exporting wav", {name, from, to, seconds: seconds == null ? null : Math.round(seconds)});
+}
+
+window.addEventListener("pagehide", () => remember(true));
+
+label();
+loadVoices();
+fetch("/session").then((response) => response.json()).then((session) => {
+  showPage(session.source || {}, session.title || "");
+  updateMcp(session.mcp || {});
+}).catch((error) => report("warn", "session unavailable", {message: String(error)}));
+connect();
+</script>
+</body>
+</html>

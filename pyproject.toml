@@ -1,21 +1,36 @@
 [build-system]
-requires = ["setuptools>=78", "setuptools-scm[toml]>=8"]
+requires = ["setuptools>=78"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "rhapsode"
-version = "0.1.0"
-description = "Turn web pages / documents into narrated audiobooks with Kokoro TTS"
+# Semantic Versioning 2.0.0. This is the only copy of the number.
+# The matching Git tag is v0.0.1, applied to the commit that publishes it.
+version = "0.0.1"
+description = "The page, read aloud. A local booth that narrates web pages into audiobooks."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "kokoro>=0.9.4",
     "faster-whisper>=1.2.0",
     "soundfile>=0.12",
     "numpy>=2",
     "num2words>=0.5.10",
-    "pydub>=0.25",
+    "typer>=0.12",
+    "mcp>=2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "build>=1.2",
+    "pytest>=8",
+    "pytest-cov>=5",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "black>=24",
+    "isort>=5",
 ]
 
 [project.scripts]
@@ -25,7 +40,20 @@ rhapsode = "rhapsode.cli:app"
 where = ["src"]
 
 [tool.setuptools.package-data]
-rhapsode = ["lexicon.txt"]
+rhapsode = ["lexicon.txt", "operator.html", "icon.svg", "extract.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.mypy]
+# kokoro, faster-whisper, soundfile, and num2words ship no type stubs.
+[[tool.mypy.overrides]]
+module = [
+    "soundfile",
+    "kokoro",
+    "kokoro.*",
+    "num2words",
+    "faster_whisper",
+    "faster_whisper.*",
+]
+ignore_missing_imports = true

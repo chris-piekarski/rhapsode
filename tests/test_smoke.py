@@ -3,6 +3,8 @@
 Only exercises the Python API — no TTS, whisper, or ffmpeg needed."""
 
 from __future__ import annotations
+
+from importlib.resources import files
 from pathlib import Path
 
 from rhapsode import (
@@ -14,6 +16,12 @@ from rhapsode import (
 
 
 # ── document loading ────────────────────────────────────────────────
+
+
+def test_booth_files_ship_with_the_package() -> None:
+    root = files("rhapsode")
+    for name in ("lexicon.txt", "operator.html", "icon.svg", "extract.js"):
+        assert root.joinpath(name).is_file()
 
 
 def test_load_plain_text(tmp_path: Path) -> None:
@@ -123,3 +131,42 @@ def test_slugify() -> None:
     assert slugify("  spaces  ") == "spaces"
     assert "-" in slugify("a---b")
     assert slugify("") == "untitled"
+
+
+def test_booth_page_has_the_living_seal() -> None:
+    html = files("rhapsode").joinpath("operator.html").read_text(encoding="utf-8")
+    assert 'id="seal"' in html
+    assert 'id="seal-needle"' in html
+    assert "function paintSeal" in html
+    assert "function needleX" in html
+    assert "function threadColor" in html
+    assert "is-muted" in html
+    assert "prefers-reduced-motion" in html
+    assert "--stitch" in html
+    assert "w-active" in html
+
+
+def test_booth_page_fills_the_section_chart() -> None:
+    html = files("rhapsode").joinpath("operator.html").read_text(encoding="utf-8")
+    assert "gantt-fill" in html
+    assert "function sectionFill" in html
+    assert "function slideSectionName" in html
+    assert "stitch-flash" in html
+    assert "section-in" in html
+    assert 'id="gantt"' in html
+    assert 'id="section-name"' in html
+    assert "gantt-head" in html
+
+
+def test_booth_page_draws_the_waveform() -> None:
+    html = files("rhapsode").joinpath("operator.html").read_text(encoding="utf-8")
+    assert 'id="wave"' in html
+    assert 'id="wave-row"' in html
+    assert 'id="sync"' in html
+    assert "function paintWave" in html
+    assert "function placeWave" in html
+    assert "function syncToPlaying" in html
+    assert "function wavePeaks" in html
+    assert "function clipAtPlayhead" in html
+    assert "is-muted" in html
+    assert "getChannelData" in html

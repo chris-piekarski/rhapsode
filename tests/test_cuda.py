@@ -33,7 +33,6 @@ def test_preload_cuda12_no_cuda_dir(tmp_path):
     assert result is False
 
 
-from unittest.mock import patch
 
 
 def test_preload_cuda12_resets_done(tmp_path):
