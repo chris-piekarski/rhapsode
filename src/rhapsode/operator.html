@@ -65,7 +65,8 @@
   #voice { flex: 1 1 10rem; min-width: 9rem; width: auto; font: inherit; color: var(--cream); background: #2a241c; border: 1px solid var(--line); border-radius: 999px; padding: 0.65rem 0.8rem; cursor: pointer; outline: none; }
   .seek-btn { min-width: 4.2rem; font-weight: 520; padding: 0.55rem 0.75rem; }
   #script { list-style: none; margin: 0.4rem 0 0; padding: 0 0 3rem; }
-  #script li { display: grid; grid-template-columns: 5.2rem 1fr 1.9rem; gap: 0.6rem; align-items: start; padding: 0.55rem 0.2rem; border-top: 1px solid var(--line); color: var(--mute); }
+  #script li { display: grid; grid-template-columns: 5.2rem 1fr 4.2rem; gap: 0.6rem; align-items: start; padding: 0.55rem 0.2rem; border-top: 1px solid var(--line); color: var(--mute); }
+  .line-actions { display: flex; gap: 0.2rem; justify-content: flex-end; }
   #script li[aria-current="true"] { color: var(--cream); }
   #script li[aria-current="true"] .words { font-family: Fraunces, Georgia, serif; font-size: 1.35rem; line-height: 1.35; }
   .kind { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; padding-top: 0.35rem; }
@@ -89,8 +90,10 @@
   #mute.is-silent .cross { display: block; }
   #level { flex: 1 1 auto; min-width: 4.5rem; width: 100%; accent-color: var(--gold); cursor: pointer; }
   #position { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
-  #script li.wave-row { display: block; padding: 0.15rem 2.6rem 0.7rem 5.8rem; border-top: 0; background: transparent; }
+  #script li.wave-row { display: grid; grid-template-columns: 5.2rem 1fr 4.2rem; gap: 0.6rem; align-items: center; padding: 0.15rem 0.2rem 0.7rem; border-top: 0; background: transparent; }
   #wave { width: 100%; height: 2.4rem; display: block; margin: 0; background: #2a241c; border: 1px solid var(--line); border-radius: 10px; }
+  #wave-play { width: 2.2rem; height: 2.2rem; padding: 0; justify-self: center; display: grid; place-items: center; }
+  #wave-play svg { width: 0.95rem; height: 0.95rem; display: block; }
   #section-name { margin: 0; min-height: 1.35rem; font-size: 0.98rem; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #gantt { position: relative; display: flex; width: 100%; height: 2.55rem; box-sizing: border-box; background: #2a241c; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   #gantt .gantt-bar { flex: 1 1 0; min-width: 0; height: 100%; box-sizing: border-box; margin: 0; padding: 0; border: 0; border-right: 1px solid var(--ink); border-radius: 0; background: #3a3126; color: var(--cream); font-size: 0.68rem; letter-spacing: 0.02em; text-align: left; white-space: nowrap; overflow: hidden; cursor: pointer; }
@@ -125,8 +128,8 @@
   .section { display: flex; align-items: center; height: 100%; box-sizing: border-box; border-right: 1px solid var(--ink); background: #3a3126; overflow: hidden; padding: 0 0.45rem; font-size: 0.68rem; letter-spacing: 0.03em; white-space: nowrap; color: var(--cream); }
   .section.head { background: #5a4630; }
   #track-head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--red); pointer-events: none; }
-  button.export { width: 1.9rem; height: 1.9rem; padding: 0; border-radius: 8px; background: transparent; color: var(--mute); display: grid; place-items: center; }
-  button.export:hover { color: var(--cream); background: #2a241c; }
+  button.export, button.copy { width: 1.9rem; height: 1.9rem; padding: 0; border-radius: 8px; background: transparent; color: var(--mute); display: grid; place-items: center; }
+  button.export:hover, button.copy:hover { color: var(--cream); background: #2a241c; }
   .mast { display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; flex: 0 0 auto; }
   #about-open { color: var(--gold); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; }
   #about-open:hover { text-decoration: underline; text-underline-offset: 0.18em; }
@@ -148,8 +151,8 @@
     #about { padding: 1rem 0.9rem 1.2rem; }
     #about h2 { font-size: 1.6rem; }
   }
-  #script li[data-kind="heading"] button.export { color: var(--gold); }
-  #script li[data-status="pending"] button.export { opacity: 0.4; }
+  #script li[data-kind="heading"] button.export, #script li[data-kind="heading"] button.copy { color: var(--gold); }
+  #script li[data-status="pending"] button.export, #script li[data-status="pending"] button.copy { opacity: 0.4; }
 </style>
 </head>
 <body>
@@ -227,7 +230,7 @@
       <div id="track" aria-label="Page position"><div id="reel"><div id="sections"></div><div id="track-head"></div></div></div>
     </div>
   </div>
-  <ol id="script"><li id="wave-row" class="wave-row"><canvas id="wave" width="640" height="48" role="img" aria-label="Waveform of the spoken line"></canvas></li></ol>
+  <ol id="script"><li id="wave-row" class="wave-row"><button type="button" id="wave-play" title="Play" aria-label="Play">Play</button><canvas id="wave" width="640" height="48" role="img" aria-label="Waveform of the spoken line"></canvas></li></ol>
 </main>
 <dialog id="about" aria-labelledby="about-title">
   <div class="about-bar">
@@ -463,6 +466,21 @@ function label() {
   state.textContent = word + " \u00b7 " + speed.toFixed(1) + "\u00d7 \u00b7 " + voiceName;
   playButton.textContent = transport === "playing" ? "Pause" : "Play";
   playButton.setAttribute("aria-pressed", String(transport === "playing"));
+  paintWavePlay();
+}
+
+const PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l12-7z"/></svg>';
+const PAUSE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+
+function paintWavePlay() {
+  const button = document.querySelector("#wave-play");
+  if (!button) return;
+  const playing = transport === "playing";
+  const word = playing ? "Pause" : "Play";
+  button.title = word;
+  button.setAttribute("aria-label", word);
+  button.setAttribute("aria-pressed", String(playing));
+  button.innerHTML = playing ? PAUSE_ICON : PLAY_ICON;
 }
 
 let sealFraction = null;
@@ -1027,7 +1045,10 @@ function renderLines() {
     const words = document.createElement("span");
     words.className = "words";
     words.textContent = line.text || "";
-    item.append(kind, words, exportButton(line, index));
+    const actions = document.createElement("div");
+    actions.className = "line-actions";
+    actions.append(copyButton(line, index), exportButton(line, index));
+    item.append(kind, words, actions);
     script.append(item);
     if (line.words && line.words.length) fillWords(index);
   });
@@ -1472,6 +1493,7 @@ function applyControl(msg) {
 }
 
 syncButton.addEventListener("click", () => syncToPlaying());
+document.querySelector("#wave-play").addEventListener("click", () => playButton.click());
 
 playButton.addEventListener("click", async () => {
   const playing = transport !== "playing";
@@ -1530,9 +1552,15 @@ trackEl.addEventListener("pointercancel", () => { dragging = false; });
 
 script.addEventListener("click", (event) => {
   const item = event.target.closest("li");
-  if (!item || item.id === "wave-row") return;
-  const line = lines[Number(item.dataset.index)];
-  if (line && line.start != null) begin(line.start);
+  if (!item || item.id === "wave-row" || event.target.closest("button")) return;
+  const index = Number(item.dataset.index);
+  const line = lines[index];
+  if (!line) return;
+  if (holdsPlayhead(index)) {
+    playButton.click();
+    return;
+  }
+  if (line.start != null) begin(line.start);
 });
 
 for (const btn of speedButtons) {
@@ -1577,6 +1605,19 @@ function cutFrom(index) {
   if (transport === "playing") begin(playhead);
 }
 
+function holdsPlayhead(index) {
+  const line = lines[index];
+  if (line && line.start != null) {
+    const end = line.end == null ? Infinity : line.end;
+    if (playhead >= line.start && playhead < end) return true;
+  }
+  if (!line || line.kind !== "heading") return false;
+  const group = sectionGroups().find((item) => item.from === index);
+  if (!group || group.start == null) return false;
+  const end = group.end == null ? Infinity : group.end;
+  return playhead >= group.start && playhead < end;
+}
+
 function lineAtPlayhead() {
   let found = 0;
   for (let i = 0; i < lines.length; i++) {
@@ -1589,6 +1630,69 @@ function lineAtPlayhead() {
 }
 
 const KIND_NAME = {heading: "section", p: "paragraph", li: "list item", quote: "quotation", code: "code block", table: "table"};
+const COPY_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 4h2.1a2 2 0 0 1 3.8 0H16a1 1 0 0 1 1 1v2H7V5a1 1 0 0 1 1-1zM7 8h10v11a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V8z"/></svg>';
+
+function blockRange(line, index) {
+  if (line.kind === "heading") {
+    const group = sectionGroups().find((item) => item.from === index);
+    if (group) return [group.from, group.to];
+  }
+  return [index, index + 1];
+}
+
+function blockText(from, to) {
+  const parts = [];
+  for (let i = from; i < to && i < lines.length; i++) {
+    const text = (lines[i].text || "").replace(/\s+/g, " ").trim();
+    if (text) parts.push(text);
+  }
+  return parts.join("\n\n");
+}
+
+function copyButton(line, index) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "copy";
+  button.innerHTML = COPY_ICON;
+  const heading = line.kind === "heading";
+  const what = KIND_NAME[line.kind] || "block";
+  const title = (line.text || "").replace(/\s+/g, " ").trim();
+  button.title = heading
+    ? "Copy section: " + (title || "heading")
+    : "Copy this " + what + (title ? ": " + title.slice(0, 72) : "");
+  button.setAttribute("aria-label", button.title);
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const range = blockRange(line, index);
+    const text = blockText(range[0], range[1]);
+    const previous = button.title;
+    const done = (ok) => {
+      const word = ok ? "Copied" : "Could not copy";
+      button.title = word;
+      button.setAttribute("aria-label", word);
+      setTimeout(() => {
+        button.title = previous;
+        button.setAttribute("aria-label", previous);
+      }, 1200);
+    };
+    const fallback = () => {
+      const area = document.createElement("textarea");
+      area.value = text;
+      document.body.append(area);
+      area.select();
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch (error) { ok = false; }
+      area.remove();
+      done(ok);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => done(true)).catch(fallback);
+      return;
+    }
+    fallback();
+  });
+  return button;
+}
 
 function exportButton(line, index) {
   const button = document.createElement("button");

@@ -162,6 +162,9 @@ def test_booth_page_draws_the_waveform() -> None:
     html = files("rhapsode").joinpath("operator.html").read_text(encoding="utf-8")
     assert 'id="wave"' in html
     assert 'id="wave-row"' in html
+    assert 'id="wave-play"' in html
+    assert "function copyButton" in html
+    assert "function holdsPlayhead" in html
     assert 'id="sync"' in html
     assert "function paintWave" in html
     assert "function placeWave" in html
