@@ -165,6 +165,9 @@ def test_booth_page_draws_the_waveform() -> None:
     assert 'id="wave-play"' in html
     assert "function copyButton" in html
     assert "function holdsPlayhead" in html
+    assert "function paintInk" in html
+    assert "w-done" in html
+    assert "w-ahead" in html
     assert 'id="sync"' in html
     assert "function paintWave" in html
     assert "function placeWave" in html

@@ -76,7 +76,11 @@
   #mcp-dot.active { background: var(--red); box-shadow: 0 0 0 3px rgba(226, 59, 47, 0.35); }
   #mcp-traffic { margin-top: 0.2rem; color: var(--gold); font-variant-numeric: tabular-nums; }
   .words { display: inline; }
+  .words span.w-ahead { color: rgba(246, 240, 230, 0.34); }
+  .words span.w-done { color: var(--cream); }
   .words span.w-active { color: var(--red); transition: color 0.05s; }
+  #script li.unwritten .words { color: rgba(246, 240, 230, 0.34); }
+  #script li.written .words { color: var(--cream); }
   #transport { display: flex; flex-direction: column; gap: 0.55rem; margin: 0.8rem 0 0.35rem; min-width: 0; }
   #controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; min-width: 0; }
   #controls button, #controls select { box-sizing: border-box; }
@@ -484,6 +488,9 @@ function paintWavePlay() {
 }
 
 let sealFraction = null;
+let inkReady = false;
+let inkLine = -1;
+let inkWord = -1;
 
 function threadColor(id) {
   const key = String(id || "");
@@ -1019,6 +1026,7 @@ function paint() {
   paintGantt(sectionGroups());
   paintSeal();
   paintWave();
+  paintInk();
 }
 
 function tick() {
@@ -1056,6 +1064,7 @@ function renderLines() {
   paintTrack();
   sealFraction = null;
   shownSection = -1;
+  inkReady = false;
 }
 
 function fillWords(index) {
@@ -1069,6 +1078,7 @@ function fillWords(index) {
     span.textContent = word.text + " ";
     holder.append(span);
   }
+  paintInkLine(index, spokenEdge());
 }
 
 function formatBytes(n) {
@@ -1594,6 +1604,7 @@ function cutFrom(index) {
   }
   hotLine = -1;
   hotWord = -1;
+  inkReady = false;
   if (restart != null) {
     playhead = restart;
     anchor = playhead;
@@ -1616,6 +1627,64 @@ function holdsPlayhead(index) {
   if (!group || group.start == null) return false;
   const end = group.end == null ? Infinity : group.end;
   return playhead >= group.start && playhead < end;
+}
+
+function spokenEdge() {
+  let line = -1;
+  let word = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const words = lines[i].words;
+    if (words && words.length) {
+      let last = -1;
+      for (let j = 0; j < words.length; j++) {
+        const end = Number(words[j].end);
+        if (Number.isFinite(end) && playhead >= end) last = j;
+        else break;
+      }
+      if (last >= 0) {
+        line = i;
+        word = last;
+      }
+      if (last < words.length - 1) return {line, word};
+      continue;
+    }
+    if (lines[i].end != null && playhead >= lines[i].end) {
+      line = i;
+      word = -1;
+      continue;
+    }
+    return {line, word};
+  }
+  return {line, word};
+}
+
+function paintInkLine(index, edge) {
+  const item = lineItem(index);
+  if (!item || !lines[index]) return;
+  const spans = item.querySelectorAll(".words span");
+  if (!spans.length) {
+    const written = lines[index].end != null && playhead >= lines[index].end;
+    item.classList.toggle("written", written);
+    item.classList.toggle("unwritten", !written);
+    return;
+  }
+  item.classList.remove("written", "unwritten");
+  for (let j = 0; j < spans.length; j++) {
+    const done = index < edge.line || (index === edge.line && edge.word >= 0 && j <= edge.word);
+    spans[j].classList.toggle("w-done", done);
+    spans[j].classList.toggle("w-ahead", !done);
+  }
+}
+
+function paintInk() {
+  const edge = spokenEdge();
+  if (inkReady && edge.line === inkLine && edge.word === inkWord) return;
+  const lo = inkReady ? Math.min(inkLine, edge.line) : 0;
+  const hi = inkReady ? Math.max(inkLine, edge.line) : lines.length - 1;
+  inkReady = true;
+  inkLine = edge.line;
+  inkWord = edge.word;
+  for (let i = Math.max(0, lo); i <= hi && i < lines.length; i++) paintInkLine(i, edge);
 }
 
 function lineAtPlayhead() {
